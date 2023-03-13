@@ -263,7 +263,12 @@ int main(int argc, char **argv)
                     } break;
 
                     case SDLK_BACKSPACE: {
-                        editor_backspace(&editor);
+                        if (editor.selection) {
+                            editor_delete_selection(&editor);
+                            editor.selection = false;
+                        } else {
+                            editor_backspace(&editor);
+                        }
                         editor.last_stroke = SDL_GetTicks();
                     }
                     break;
@@ -302,7 +307,12 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_DELETE: {
-                        editor_delete(&editor);
+                        if (editor.selection) {
+                            editor_delete_selection(&editor);
+                            editor.selection = false;
+                        } else {
+                            editor_delete(&editor);
+                        }
                         editor.last_stroke = SDL_GetTicks();
                     }
                     break;

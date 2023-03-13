@@ -43,6 +43,40 @@ void editor_delete(Editor *e)
     editor_retokenize(e);
 }
 
+void editor_delete_selection(Editor *e)
+{
+    assert(e->selection);
+
+    if (e->cursor > e->select_begin) {
+        if (e->cursor > e->data.count) {
+            e->cursor = e->data.count;
+        }
+        if (e->cursor == 0) return;
+
+        size_t nchars = e->cursor - e->select_begin;
+        memmove(
+            &e->data.items[e->cursor - nchars],
+            &e->data.items[e->cursor],
+            e->data.count - e->cursor
+        );
+
+        e->cursor -= nchars;
+        e->data.count -= nchars;
+    } else {
+        if (e->cursor >= e->data.count) return;
+
+        size_t nchars = e->select_begin - e->cursor;
+        memmove(
+            &e->data.items[e->cursor],
+            &e->data.items[e->cursor + nchars],
+            e->data.count - e->cursor - nchars
+        );
+
+        e->data.count -= nchars;
+    }
+    editor_retokenize(e);
+}
+
 // TODO: make sure that you always have new line at the end of the file while saving
 // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_206
 
