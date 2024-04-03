@@ -133,7 +133,11 @@ Vec4f hex_to_vec4f(uint32_t color)
 Errno type_of_file(const char *file_path, File_Type *ft)
 {
 #ifdef _WIN32
-#error "TODO: type_of_file() is not implemented for Windows"
+    if (GetFileAttributesA(file_path) & FILE_ATTRIBUTE_DIRECTORY) {
+        *ft = FT_DIRECTORY;
+    } else {
+        *ft = FT_REGULAR;
+    }
 #else
     struct stat sb = {0};
     if (stat(file_path, &sb) < 0) return errno;
