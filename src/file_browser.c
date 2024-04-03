@@ -190,18 +190,18 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
         if (target_scale > 3.0f) {
             target_scale = 3.0f;
         } else {
-            offset = cursor_pos.x - w/3/sr->camera_scale;
+            offset = cursor_pos.x - w/3/sr->cam.scale;
             if (offset < 0.0f) offset = 0.0f;
-            target = vec2f(w/3/sr->camera_scale + offset, cursor_pos.y);
+            target = vec2f(w/3/sr->cam.scale + offset, cursor_pos.y);
         }
 
-        sr->camera_vel = vec2f_mul(
-                             vec2f_sub(target, sr->camera_pos),
+        sr->cam.vel = vec2f_mul(
+                             vec2f_sub(target, sr->cam.pos),
                              vec2fs(2.0f));
-        sr->camera_scale_vel = (target_scale - sr->camera_scale) * 2.0f;
+        sr->cam.scale_vel = (target_scale - sr->cam.scale) * 2.0f;
 
-        sr->camera_pos = vec2f_add(sr->camera_pos, vec2f_mul(sr->camera_vel, vec2fs(DELTA_TIME)));
-        sr->camera_scale = sr->camera_scale + sr->camera_scale_vel * DELTA_TIME;
+        sr->cam.pos = vec2f_add(sr->cam.pos, vec2f_mul(sr->cam.vel, vec2fs(DELTA_TIME)));
+        sr->cam.scale = sr->cam.scale + sr->cam.scale_vel * DELTA_TIME;
     }
 }
 

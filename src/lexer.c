@@ -28,7 +28,7 @@ const char *jKeywords[] = {
     "return", "short", "static", "super", "switch", "synchronized", "this", "throw",
     "throws", "transient", "try", "void", "volatile", "while", "non-sealed", "open",
     "opens", "permits", "provides", "record", "sealed", "to", "transitive", "uses", "var",
-    "with", "yield", "true", "false", "null", "const", "goto", "strictfp", 
+    "with", "yield", "true", "false", "null", "const", "goto", "strictfp",
 };
 #define jKeywords_count (sizeof(jKeywords)/sizeof(jKeywords[0]))
 
@@ -36,7 +36,7 @@ const char *ktKeywords[] = {
     "abstract", "break", "catch", "class", "const", "continue", "else", "enum", "is", "as",
     "when", "val", "var", "for", "if", "import", "interface", "data", "external", "inner",
     "package", "private", "protected", "return", "super", "when",  "this", "throw",
-    "try", "while", "sealed", "open", "true", "false", "null", "fun", "typealias", 
+    "try", "while", "sealed", "open", "true", "false", "null", "fun", "typealias", "in",
 };
 #define ktKeywords_count (sizeof(ktKeywords)/sizeof(ktKeywords[0]))
 

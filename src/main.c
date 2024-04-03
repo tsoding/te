@@ -52,10 +52,6 @@ static Simple_Renderer sr = {0};
 static Editor editor = {0};
 static File_Browser fb = {0};
 
-// TODO: display errors reported via flash_error right in the text editor window somehow
-#define flash_error(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); } while(0)
-
-
 int main(int argc, char **argv)
 {
     Errno err;
@@ -204,13 +200,13 @@ int main(int argc, char **argv)
                             File_Type ft;
                             err = type_of_file(file_path, &ft);
                             if (err != 0) {
-                                flash_error("Could not determine type of file %s: %s", file_path, strerror(err));
+                                flash_error(&editor, "Could not determine type of file %s: %s", file_path, strerror(err));
                             } else {
                                 switch (ft) {
                                 case FT_DIRECTORY: {
                                     err = fb_change_dir(&fb);
                                     if (err != 0) {
-                                        flash_error("Could not change directory to %s: %s", file_path, strerror(err));
+                                        flash_error(&editor, "Could not change directory to %s: %s", file_path, strerror(err));
                                     }
                                 }
                                 break;
@@ -220,7 +216,7 @@ int main(int argc, char **argv)
                                     // And if you do, annoy the user about it. (just like all the other editors do)
                                     err = editor_load_from_file(&editor, file_path);
                                     if (err != 0) {
-                                        flash_error("Could not open file %s: %s", file_path, strerror(err));
+                                        flash_error(&editor, "Could not open file %s: %s", file_path, strerror(err));
                                     } else {
                                         file_browser = false;
                                     }
@@ -228,7 +224,7 @@ int main(int argc, char **argv)
                                 break;
 
                                 case FT_OTHER: {
-                                    flash_error("%s is neither a regular file nor a directory. We can't open it.", file_path);
+                                    flash_error(&editor, "%s is neither a regular file nor a directory. We can't open it.", file_path);
                                 }
                                 break;
 
@@ -277,11 +273,11 @@ int main(int argc, char **argv)
                         if (editor.file_path.count > 0) {
                             err = editor_save(&editor);
                             if (err != 0) {
-                                flash_error("Could not save currently edited file: %s", strerror(err));
+                                flash_error(&editor, "Could not save currently edited file: %s", strerror(err));
                             }
                         } else {
                             // TODO: ask the user for the path to save to in this situation
-                            flash_error("Nowhere to save the text");
+                            flash_error(&editor, "Nowhere to save the text");
                         }
                     }
                     break;

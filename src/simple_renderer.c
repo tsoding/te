@@ -130,7 +130,7 @@ static void get_uniform_location(GLuint program, GLint locations[COUNT_UNIFORM_S
 
 void simple_renderer_init(Simple_Renderer *sr)
 {
-    sr->camera_scale = 3.0f;
+    sr->cam.scale = 3.0f;
 
     {
         glGenVertexArrays(1, &sr->vao);
@@ -321,8 +321,8 @@ void simple_renderer_set_shader(Simple_Renderer *sr, Simple_Shader shader)
     get_uniform_location(sr->programs[sr->current_shader], sr->uniforms);
     glUniform2f(sr->uniforms[UNIFORM_SLOT_RESOLUTION], sr->resolution.x, sr->resolution.y);
     glUniform1f(sr->uniforms[UNIFORM_SLOT_TIME], sr->time);
-    glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->camera_pos.x, sr->camera_pos.y);
-    glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->camera_scale);
+    glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->cam.pos.x, sr->cam.pos.y);
+    glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->cam.scale);
 }
 
 void simple_renderer_flush(Simple_Renderer *sr)

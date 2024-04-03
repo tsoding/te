@@ -27,12 +27,27 @@ typedef struct {
 } Tokens;
 
 typedef struct {
+    Uint32 uid;
+    const char *msg;
+    size_t msg_size;
+    Vec4f color;
+    Uint32 when;
+    Uint32 lasts;
+} PopUp;
+
+typedef struct {
+    PopUp *items;
+    size_t count;
+} PopUps;
+
+typedef struct {
     Free_Glyph_Atlas *atlas;
 
     String_Builder data;
     Lines lines;
     Tokens tokens;
     String_Builder file_path;
+    PopUps popUps;
 
     bool searching;
     String_Builder search;
@@ -49,6 +64,9 @@ typedef struct {
 Errno editor_save_as(Editor *editor, const char *file_path);
 Errno editor_save(const Editor *editor);
 Errno editor_load_from_file(Editor *editor, const char *file_path);
+
+Uint32 editor_add_popup(Editor *editor, PopUp *popUp);
+void editor_remove_popup(Editor *editor, Uint32 uid);
 
 void editor_backspace(Editor *editor);
 void editor_delete(Editor *editor);
@@ -80,5 +98,10 @@ void editor_clipboard_paste(Editor *e);
 void editor_start_search(Editor *e);
 void editor_stop_search(Editor *e);
 bool editor_search_matches_at(Editor *e, size_t pos);
+
+void flash_error_str(Editor *editor, const char *str);
+
+// TODO: display errors reported via flash_error right in the text editor window somehow
+#define flash_error(editor, ...) do { static char buf[200]; sprintf(buf, __VA_ARGS__); flash_error_str(editor, buf); } while(0)
 
 #endif // EDITOR_H_

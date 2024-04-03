@@ -415,6 +415,48 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_flush(sr);
     }
 
+    // Render pop-ups
+    {
+        Simple_Camera oldCam = sr->cam;
+        sr->cam = (Simple_Camera) {
+            .pos = vec2f((float) w / 2 - 20.0f, -((float) h / 2) + 80.0f),
+            .scale = 1.0f,
+            .scale_vel = 0.0f,
+            .vel = vec2f(0, 0)
+        };
+        simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
+
+        for (size_t i = 0; i < editor->popUps.count; i ++) {
+            PopUp *p = &editor->popUps.items[i];
+            if (p->lasts == 0)
+                continue;
+
+            if (p->when + p->lasts < SDL_GetTicks()) {
+                editor_remove_popup(editor, p->uid);
+                i --;
+            }
+        }
+
+        for (size_t i = 0; i < editor->popUps.count; i ++) {
+            PopUp *p = &editor->popUps.items[i];
+
+            float t = (SDL_GetTicks() - p->when) / 300.0f;
+            if (t > 1)
+                t = 1;
+            else if (t < 0)
+                t = 0;
+
+            Vec2f pos = vec2f(
+                lerpf(-180, 0, t),
+                -(i * 80.0f)
+            );
+            free_glyph_atlas_render_line_sized(atlas, sr, p->msg, p->msg_size, &pos, p->color);
+        }
+
+        simple_renderer_flush(sr);
+        sr->cam = oldCam;
+    }
+
     // Update camera
     {
         if (max_line_len > 1000.0f) {
@@ -429,18 +471,18 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         if (target_scale > 3.0f) {
             target_scale = 3.0f;
         } else {
-            offset = cursor_pos.x - w/3/sr->camera_scale;
+            offset = cursor_pos.x - w/3/sr->cam.scale;
             if (offset < 0.0f) offset = 0.0f;
-            target = vec2f(w/3/sr->camera_scale + offset, cursor_pos.y);
+            target = vec2f(w/3/sr->cam.scale + offset, cursor_pos.y);
         }
 
-        sr->camera_vel = vec2f_mul(
-                             vec2f_sub(target, sr->camera_pos),
+        sr->cam.vel = vec2f_mul(
+                             vec2f_sub(target, sr->cam.pos),
                              vec2fs(2.0f));
-        sr->camera_scale_vel = (target_scale - sr->camera_scale) * 2.0f;
+        sr->cam.scale_vel = (target_scale - sr->cam.scale) * 2.0f;
 
-        sr->camera_pos = vec2f_add(sr->camera_pos, vec2f_mul(sr->camera_vel, vec2fs(DELTA_TIME)));
-        sr->camera_scale = sr->camera_scale + sr->camera_scale_vel * DELTA_TIME;
+        sr->cam.pos = vec2f_add(sr->cam.pos, vec2f_mul(sr->cam.vel, vec2fs(DELTA_TIME)));
+        sr->cam.scale = sr->cam.scale + sr->cam.scale_vel * DELTA_TIME;
     }
 }
 
@@ -575,4 +617,43 @@ void editor_move_paragraph_down(Editor *e)
         row += 1;
     }
     e->cursor = e->lines.items[row].begin;
+}
+
+Uint32 nextPopUpUid = 0;
+Uint32 editor_add_popup(Editor *editor, PopUp *popUp)
+{
+    editor->popUps.count ++;
+    editor->popUps.items = realloc(editor->popUps.items, sizeof(PopUp) * editor->popUps.count);
+    memcpy(&editor->popUps.items[editor->popUps.count - 1], popUp, sizeof(PopUp));
+    editor->popUps.items[editor->popUps.count - 1].uid = nextPopUpUid;
+    return nextPopUpUid ++;
+}
+
+void editor_remove_popup(Editor *editor, Uint32 uid)
+{
+    for (size_t i = 0; i < editor->popUps.count; i ++) {
+        PopUp *p = &editor->popUps.items[i];
+        if (p->uid != uid)
+            continue;
+
+        memcpy(p, p + 1, (editor->popUps.count - i - 1) * sizeof(PopUp));
+        editor->popUps.count --;
+        editor->popUps.items = realloc(editor->popUps.items, sizeof(PopUp) * editor->popUps.count);
+        break;
+    }
+}
+
+void flash_error_str(Editor *editor, const char *str)
+{
+    fputs(str, stderr);
+    fputc('\n', stderr);
+
+    PopUp p;
+    p.msg = str;
+    p.msg_size = strlen(str);
+    p.color = hex_to_vec4f(0xD20103FF);
+    p.when = SDL_GetTicks();
+    p.lasts = 2000;
+
+    (void) editor_add_popup(editor, &p);
 }
