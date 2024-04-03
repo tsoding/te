@@ -758,4 +758,7 @@ void editor_start_input(Editor *editor)
     editor->input.required = false;
     editor->input.hint_len = 0;
     if (editor->input.text.items) {
-        free(edi
+        free(editor->input.text.items);
+        editor->input.text = (String_Builder){0};
+    }
+}
