@@ -47,6 +47,8 @@ typedef struct {
     bool active;
     bool required;
     void (*onDone)(struct Editor_s *);
+	const char *hint;
+	size_t hint_len;
 } Input;
 
 typedef struct Editor_s {
@@ -58,6 +60,7 @@ typedef struct Editor_s {
     String_Builder file_path;
     PopUps popUps;
     Input input;
+	File_Extension file_ext;
 
     bool searching;
 

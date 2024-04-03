@@ -123,6 +123,22 @@ Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len
     return l;
 }
 
+const char *file_ext_str(File_Extension ext)
+{
+    switch (ext) {
+        case FEXT_KOTLIN:
+            return "Kotlin";
+        case FEXT_JAVA:
+            return "Java";
+        case FEXT_CPP:
+            return "C++";
+        case FEXT_PYTHON:
+            return "Python";
+        default:
+            return "?";
+    }
+}
+
 bool lexer_starts_with(Lexer *l, const char *prefix)
 {
     size_t prefix_len = strlen(prefix);

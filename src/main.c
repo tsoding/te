@@ -244,7 +244,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_to_line_begin(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     } break;
 
                     case SDLK_END: {
@@ -254,7 +253,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_to_line_end(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     } break;
 
                     case SDLK_BACKSPACE: {
@@ -264,7 +262,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_backspace(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
 
@@ -273,6 +270,8 @@ int main(int argc, char **argv)
                             if (event.key.keysym.mod & KMOD_SHIFT) {
                                 editor_start_input(&editor);
                                 editor.input.onDone = onSaveInputPath;
+                                editor.input.hint = "path:";
+                                editor.input.hint_len = strlen(editor.input.hint);
                             } else if (editor.file_path.count > 0) {
                                 err = editor_save(&editor);
                                 if (err != 0) {
@@ -282,6 +281,8 @@ int main(int argc, char **argv)
                                 editor_start_input(&editor);
                                 editor.input.onDone = onSaveInputPath;
                                 editor.input.required = true;
+                                editor.input.hint = "path:";
+                                editor.input.hint_len = strlen(editor.input.hint);
                             }
                         }
                     }
@@ -313,7 +314,6 @@ int main(int argc, char **argv)
                                 editor.selection = false;
                             }
                             editor_insert_char(&editor, '\n');
-                            editor.last_stroke = SDL_GetTicks();
                         }
                     }
                     break;
@@ -325,7 +325,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_delete(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
 
@@ -401,7 +400,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_line_up(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
 
@@ -412,7 +410,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_line_down(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
 
@@ -423,7 +420,6 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_char_left(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
 
@@ -434,10 +430,11 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_char_right(&editor);
                         }
-                        editor.last_stroke = SDL_GetTicks();
                     }
                     break;
                     }
+
+                    editor.last_stroke = SDL_GetTicks();
                 }
             }
             break;

@@ -49,6 +49,8 @@ typedef struct {
     File_Extension file_ext;
 } Lexer;
 
+const char *file_ext_str(File_Extension ext);
+
 Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len, String_Builder file_path);
 Token lexer_next(Lexer *l);
 

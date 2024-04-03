@@ -259,6 +259,7 @@ void editor_retokenize(Editor *e)
     {
         e->tokens.count = 0;
         Lexer l = lexer_new(e->atlas, e->data.items, e->data.count, e->file_path);
+        e->file_ext = l.file_ext;
         Token t = lexer_next(&l);
         while (t.kind != TOKEN_END) {
             da_append(&e->tokens, t);
@@ -421,12 +422,15 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_flush(sr);
     }
 
+	float scale = 0.6f;
+	float oscale = 1.0f / scale;
+
     // Render pop-ups
     {
         Simple_Camera oldCam = sr->cam;
         sr->cam = (Simple_Camera) {
-            .pos = vec2f((float) w / 2 - 20.0f, -((float) h / 2) + 80.0f),
-            .scale = 1.0f,
+            .pos = vec2f((float) w / 2 * oscale - 20.0f * scale, -((float) h / 2 * oscale) + 80.0f * scale),
+            .scale = scale,
             .scale_vel = 0.0f,
             .vel = vec2f(0, 0)
         };
@@ -453,8 +457,8 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 t = 0;
 
             Vec2f pos = vec2f(
-                lerpf(-180, 0, t),
-                -(i * 80.0f)
+                lerpf(-180 * oscale, 0, t),
+                -(i * 80.0f * scale)
             );
             free_glyph_atlas_render_line_sized(atlas, sr, p->msg, p->msg_size, &pos, p->color);
         }
@@ -463,40 +467,81 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         sr->cam = oldCam;
     }
 
+	// Render bottom bar
+	{
+Simple_Camera oldCam = sr->cam;
+        sr->cam = (Simple_Camera) {
+            .pos = vec2f((float) w / 2 * oscale, ((float) h / 2 * oscale) - 60.0f * scale),
+            .scale = scale,
+            .scale_vel = 0.0f,
+            .vel = vec2f(0, 0)
+        };
+
+{
+            simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
+            Vec4f bg = vec4fs(1);
+            Vec2f p1 = vec2f(0, -60.0f * scale);
+            Vec2f s = vec2f(w * oscale, 60.0f + 60.0f * scale);
+            simple_renderer_solid_rect(sr, p1, s, bg);
+            simple_renderer_flush(sr);
+        }
+
+float x = 20.0f * scale;
+
     // Render input
-    {
-        if (editor->input.active) {
-            Simple_Camera oldCam = sr->cam;
-            sr->cam = (Simple_Camera) {
-                .pos = vec2f((float) w / 2, ((float) h / 2) - 60.0f),
-                .scale = 1.0f,
-                .scale_vel = 0.0f,
-                .vel = vec2f(0, 0)
-            };
+    if (editor->input.active) {
 
-            {
-                simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
-                Vec4f bg = vec4fs(1);
-                Vec2f p1 = vec2f(0, -60);
-                Vec2f s = vec2f(w, 120);
-                simple_renderer_solid_rect(sr, p1, s, bg);
-                simple_renderer_flush(sr);
-            }
 
-            {
-                simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = vec4fs(0);
-                Vec2f pos = vec2f(20, -20);
-                free_glyph_atlas_render_line_sized(atlas, sr,
-                                                   editor->input.text.items,
-                                                   editor->input.text.count,
-                                                   &pos, color);
-                simple_renderer_flush(sr);
-            }
+        {
+            simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
+            Vec4f color = hex_to_vec4f(0x7C7A7AFF);
+            Vec2f pos = vec2f(x, -20 * scale);
+            free_glyph_atlas_render_line_sized(atlas, sr,
+                                               editor->input.hint,
+                                               editor->input.hint_len,
+                                               &pos, color);
+			x = pos.x;
+            simple_renderer_flush(sr);
+        }
 
-            sr->cam = oldCam;
+		{
+            simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
+            Vec4f color = vec4fs(0);
+            Vec2f pos = vec2f(x, -20 * scale);
+            free_glyph_atlas_render_line_sized(atlas, sr,
+                                               editor->input.text.items,
+                                               editor->input.text.count,
+                                               &pos, color);
+            simple_renderer_flush(sr);
         }
     }
+	// Render additional info
+	else {
+		Simple_Camera oldCam = sr->cam;
+        sr->cam = (Simple_Camera) {
+            .pos = vec2f((float) w / 2 * oscale, ((float) h / 2 * oscale) - 60.0f * scale),
+            .scale = scale,
+            .scale_vel = 0.0f,
+            .vel = vec2f(0, 0)
+        };
+
+		static char str[200]; // TODO
+		sprintf(str, "%s  %zu / %zu", file_ext_str(editor->file_ext), editor_cursor_row(editor) + 1, editor->lines.count);
+
+{
+            simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
+            Vec4f color = vec4fs(0);
+            Vec2f pos = vec2f(x, -20 * scale);
+            free_glyph_atlas_render_line_sized(atlas, sr,
+                                               str,
+                                               strlen(str),
+                                               &pos, color);
+			x = pos.x;
+            simple_renderer_flush(sr);
+        }
+	}
+sr->cam = oldCam;
+	}
 
     // Update camera
     {
@@ -584,6 +629,8 @@ void editor_start_search(Editor *e)
     } else {
         e->searching = true;
         editor_start_input(e);
+		e->input.hint = "find:";
+		e->input.hint_len = strlen(e->input.hint);
         if (e->selection) {
             size_t begin = e->select_begin;
             size_t end = e->cursor;
@@ -710,6 +757,7 @@ void editor_start_input(Editor *editor)
     editor->input.active = true;
     editor->input.onDone = NULL;
     editor->input.required = false;
+	editor->input.hint_len = 0;
     if (editor->input.text.items) {
         free(editor->input.text.items);
         editor->input.text = (String_Builder){0};
