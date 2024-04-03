@@ -185,11 +185,6 @@ int main(int argc, char **argv)
 
                 if (file_browser) {
                     switch (event.key.keysym.sym) {
-                    case SDLK_F3: {
-                        file_browser = false;
-                    }
-                    break;
-
                     case SDLK_UP: {
                         if (fb.cursor > 0) fb.cursor -= 1;
                     }
@@ -218,8 +213,6 @@ int main(int argc, char **argv)
                                 break;
 
                                 case FT_REGULAR: {
-                                    // TODO: before opening a new file make sure you don't have unsaved changes
-                                    // And if you do, annoy the user about it. (just like all the other editors do)
                                     err = editor_load_from_file(&editor, file_path);
                                     if (err != 0) {
                                         flash_error(&editor, "Could not open file %s: %s", file_path, strerror(err));
@@ -277,8 +270,10 @@ int main(int argc, char **argv)
 
                     case SDLK_s: {
                         if (event.key.keysym.mod & KMOD_CTRL) {
-                            // TODO: ctrl+shift+s
-                            if (editor.file_path.count > 0) {
+                            if (event.key.keysym.mod & KMOD_SHIFT) {
+                                editor_start_input(&editor);
+                                editor.input.onDone = onSaveInputPath;
+                            } else if (editor.file_path.count > 0) {
                                 err = editor_save(&editor);
                                 if (err != 0) {
                                     flash_error(&editor, "Can't save: %s", strerror(err));
@@ -286,13 +281,17 @@ int main(int argc, char **argv)
                             } else {
                                 editor_start_input(&editor);
                                 editor.input.onDone = onSaveInputPath;
+                                editor.input.required = true;
                             }
                         }
                     }
                     break;
 
-                    case SDLK_F3: {
-                        file_browser = true;
+                    case SDLK_o: {
+                        // TODO: annoy user if unsaved changes
+                        if (event.key.keysym.mod & KMOD_CTRL) {
+                            file_browser = true;
+                        }
                     }
                     break;
 

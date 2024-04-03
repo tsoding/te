@@ -45,6 +45,7 @@ struct Editor_s;
 typedef struct {
     String_Builder text;
     bool active;
+    bool required;
     void (*onDone)(struct Editor_s *);
 } Input;
 

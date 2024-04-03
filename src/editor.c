@@ -599,8 +599,8 @@ void editor_start_search(Editor *e)
 void editor_stop_search(Editor *e)
 {
     e->searching = false;
-    e->input.active = false;
-    e->input.onDone = NULL;
+    if (!e->input.required)
+        e->input.active = false;
 }
 
 bool editor_search_matches_at(Editor *e, size_t pos)
@@ -709,6 +709,7 @@ void editor_start_input(Editor *editor)
 {
     editor->input.active = true;
     editor->input.onDone = NULL;
+    editor->input.required = false;
     if (editor->input.text.items) {
         free(editor->input.text.items);
         editor->input.text = (String_Builder){0};
