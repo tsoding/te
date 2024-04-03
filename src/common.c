@@ -95,7 +95,12 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
     FILE *f = NULL;
 
     f = fopen(file_path, "r");
-    if (f == NULL) return_defer(errno);
+    if (f == NULL) {
+        f = fopen(file_path, "w");
+        if (f == NULL) return_defer(errno);
+        fclose(f);
+        f = fopen(file_path, "r");
+    }
 
     size_t size;
     Errno err = file_size(f, &size);
