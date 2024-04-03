@@ -8,9 +8,9 @@
 
 void editor_backspace(Editor *e)
 {
-    if (e->searching) {
-        if (e->search.count > 0) {
-            e->search.count -= 1;
+    if (e->input.active) {
+        if (e->input.text.count > 0) {
+            e->input.text.count -= 1;
         }
     } else {
         if (e->cursor > e->data.count) {
@@ -198,34 +198,21 @@ void editor_insert_char(Editor *e, char x)
 
 void editor_insert_buf(Editor *e, char *buf, size_t buf_len)
 {
-    if (e->searching) {
-        sb_append_buf(&e->search, buf, buf_len);
-        bool matched = false;
-        for (size_t pos = e->cursor; pos < e->data.count; ++pos) {
-            if (editor_search_matches_at(e, pos)) {
-                e->cursor = pos;
-                matched = true;
-                break;
-            }
-        }
-        if (!matched) e->search.count -= buf_len;
-    } else {
-        if (e->cursor > e->data.count) {
-            e->cursor = e->data.count;
-        }
-
-        for (size_t i = 0; i < buf_len; ++i) {
-            da_append(&e->data, '\0');
-        }
-        memmove(
-            &e->data.items[e->cursor + buf_len],
-            &e->data.items[e->cursor],
-            e->data.count - e->cursor - buf_len
-        );
-        memcpy(&e->data.items[e->cursor], buf, buf_len);
-        e->cursor += buf_len;
-        editor_retokenize(e);
+    if (e->cursor > e->data.count) {
+        e->cursor = e->data.count;
     }
+
+    for (size_t i = 0; i < buf_len; ++i) {
+        da_append(&e->data, '\0');
+    }
+    memmove(
+        &e->data.items[e->cursor + buf_len],
+        &e->data.items[e->cursor],
+        e->data.count - e->cursor - buf_len
+    );
+    memcpy(&e->data.items[e->cursor], buf, buf_len);
+    e->cursor += buf_len;
+    editor_retokenize(e);
 }
 
 void editor_retokenize(Editor *e)
@@ -355,12 +342,12 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
     // Render search
     {
-        if (editor->searching) {
+        if (editor->searching && editor_search_matches_at(editor, editor->cursor)) {
             simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
             Vec4f selection_color = vec4f(.10, .10, .25, 1);
             Vec2f p1 = cursor_pos;
             Vec2f p2 = p1;
-            free_glyph_atlas_measure_line_sized(editor->atlas, editor->search.items, editor->search.count, &p2);
+            free_glyph_atlas_measure_line_sized(editor->atlas, editor->input.text.items, editor->input.text.count, &p2);
             simple_renderer_solid_rect(sr, p1, vec2f(p2.x - p1.x, FREE_GLYPH_FONT_SIZE), selection_color);
             simple_renderer_flush(sr);
         }
@@ -457,6 +444,41 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         sr->cam = oldCam;
     }
 
+    // Render input
+    {
+        if (editor->input.active) {
+            Simple_Camera oldCam = sr->cam;
+            sr->cam = (Simple_Camera) {
+                .pos = vec2f((float) w / 2, ((float) h / 2) - 60.0f),
+                .scale = 1.0f,
+                .scale_vel = 0.0f,
+                .vel = vec2f(0, 0)
+            };
+
+            {
+                simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
+                Vec4f bg = vec4fs(1);
+                Vec2f p1 = vec2f(0, -60);
+                Vec2f s = vec2f(w, 120);
+                simple_renderer_solid_rect(sr, p1, s, bg);
+                simple_renderer_flush(sr);
+            }
+
+            {
+                simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
+                Vec4f color = vec4fs(0);
+                Vec2f pos = vec2f(20, -20);
+                free_glyph_atlas_render_line_sized(atlas, sr,
+                                                   editor->input.text.items,
+                                                   editor->input.text.count,
+                                                   &pos, color);
+                simple_renderer_flush(sr);
+            }
+
+            sr->cam = oldCam;
+        }
+    }
+
     // Update camera
     {
         if (max_line_len > 1000.0f) {
@@ -542,11 +564,15 @@ void editor_start_search(Editor *e)
         }
     } else {
         e->searching = true;
+        editor_start_input(e);
         if (e->selection) {
+            size_t begin = e->select_begin;
+            size_t end = e->cursor;
+            if (begin > end) SWAP(size_t, begin, end);
+
+            sb_append_buf(&e->input.text, &e->data.items[begin], end - begin + 1);
+            e->cursor = begin;
             e->selection = false;
-            // TODO: put the selection into the search automatically
-        } else {
-            e->search.count = 0;
         }
     }
 }
@@ -554,13 +580,14 @@ void editor_start_search(Editor *e)
 void editor_stop_search(Editor *e)
 {
     e->searching = false;
+    e->input.active = false;
 }
 
 bool editor_search_matches_at(Editor *e, size_t pos)
 {
-    if (e->data.count - pos < e->search.count) return false;
-    for (size_t i = 0; i < e->search.count; ++i) {
-        if (e->search.items[i] != e->data.items[pos + i]) {
+    if (e->data.count - pos < e->input.text.count) return false;
+    for (size_t i = 0; i < e->input.text.count; ++i) {
+        if (e->input.text.items[i] != e->data.items[pos + i]) {
             return false;
         }
     }
@@ -656,4 +683,13 @@ void flash_error_str(Editor *editor, const char *str)
     p.lasts = 2000;
 
     (void) editor_add_popup(editor, &p);
+}
+
+void editor_start_input(Editor *editor)
+{
+    editor->input.active = true;
+    if (editor->input.text.items) {
+        free(editor->input.text.items);
+        editor->input.text = (String_Builder){0};
+    }
 }

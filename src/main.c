@@ -273,7 +273,15 @@ int main(int argc, char **argv)
                         if (editor.file_path.count > 0) {
                             err = editor_save(&editor);
                             if (err != 0) {
-                                flash_error(&editor, "Could not save currently edited file: %s", strerror(err));
+                                flash_error(&editor, "Can't save: %s", strerror(err));
+                            } else {
+                                PopUp p;
+                                p.msg = "Saved file!";
+                                p.msg_size = strlen(p.msg);
+                                p.color = hex_to_vec4f(0x7DDA58FF);
+                                p.when = SDL_GetTicks();
+                                p.lasts = 1000;
+                                (void) editor_add_popup(&editor, &p);
                             }
                         } else {
                             // TODO: ask the user for the path to save to in this situation
@@ -295,7 +303,13 @@ int main(int argc, char **argv)
                     case SDLK_RETURN: {
                         if (editor.searching) {
                             editor_stop_search(&editor);
+                        } else if (editor.input.active) {
+                            editor.input.active = false;
                         } else {
+                            if (editor.selection) {
+                                editor_delete_selection(&editor);
+                                editor.selection = false;
+                            }
                             editor_insert_char(&editor, '\n');
                             editor.last_stroke = SDL_GetTicks();
                         }
@@ -336,15 +350,19 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_TAB: {
-                        // TODO: indent on Tab instead of just inserting 4 spaces at the cursor
-                        // That is insert the spaces at the beginning of the line. Shift+TAB should
-                        // do unindent, that is remove 4 spaces from the beginning of the line.
-                        // TODO: customizable indentation style
-                        // - tabs/spaces
-                        // - tab width
-                        // - etc.
-                        for (size_t i = 0; i < 4; ++i) {
-                            editor_insert_char(&editor, ' ');
+                        if (editor.searching) {
+                            editor_start_search(&editor);
+                        } else {
+                            // TODO: indent on Tab instead of just inserting 4 spaces at the cursor
+                            // That is insert the spaces at the beginning of the line. Shift+TAB should
+                            // do unindent, that is remove 4 spaces from the beginning of the line.
+                            // TODO: customizable indentation style
+                            // - tabs/spaces
+                            // - tab width
+                            // - etc.
+                            for (size_t i = 0; i < 4; ++i) {
+                                editor_insert_char(&editor, ' ');
+                            }
                         }
                     }
                     break;
@@ -352,6 +370,17 @@ int main(int argc, char **argv)
                     case SDLK_c: {
                         if (event.key.keysym.mod & KMOD_CTRL) {
                             editor_clipboard_copy(&editor);
+                        }
+                    }
+                    break;
+
+                    case SDLK_x: {
+                        if (event.key.keysym.mod & KMOD_CTRL) {
+                            editor_clipboard_copy(&editor);
+                            if (editor.selection) {
+                                editor_delete_selection(&editor);
+                                editor.selection = false;
+                            }
                         }
                     }
                     break;
@@ -412,7 +441,9 @@ int main(int argc, char **argv)
             break;
 
             case SDL_TEXTINPUT: {
-                if (file_browser) {
+                if (editor.input.active) {
+                    sb_append_cstr(&editor.input.text, event.text.text);
+                } else if (file_browser) {
                     // Nothing for now
                     // Once we have incremental search in the file browser this may become useful
                 } else {
@@ -422,6 +453,9 @@ int main(int argc, char **argv)
                         editor_insert_char(&editor, text[i]);
                     }
                     editor.last_stroke = SDL_GetTicks();
+                }
+                if (editor.searching && !editor_search_matches_at(&editor, editor.cursor)) {
+                    editor_start_search(&editor);
                 }
             }
             break;

@@ -100,30 +100,24 @@ Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len
     l.atlas = atlas;
     l.content = content;
     l.content_len = content_len;
+    l.file_ext = FEXT_CPP;
     if (file_path.items != NULL) {
         l.file_path.items = (char*) malloc(sizeof(char*) * (strlen(file_path.items) + 1));
         strcpy(l.file_path.items, file_path.items);
 
-        File_Extension file_ext;
         const char *filename = l.file_path.items;
         const char *dot = strrchr(filename, '.');
-        if (!dot || dot == filename) {
-            file_ext = FEXT_CPP;
-        } else {
+        if (dot && dot != filename) {
             const char *file_ext_str = dot + 1;
 
             if (strcmp(file_ext_str, "kt") == 0 || strcmp(file_ext_str, "kts") == 0) {
-                file_ext = FEXT_KOTLIN;
+                l.file_ext = FEXT_KOTLIN;
             } else if (strcmp(file_ext_str, "py") == 0) {
-                file_ext = FEXT_PYTHON;
+                l.file_ext = FEXT_PYTHON;
             } else if (strcmp(file_ext_str, "java") == 0) {
-                file_ext = FEXT_JAVA;
-            } else {
-                file_ext = FEXT_CPP;
+                l.file_ext = FEXT_JAVA;
             }
         }
-
-        l.file_ext = file_ext;
     }
 
     return l;

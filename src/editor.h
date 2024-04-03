@@ -41,6 +41,11 @@ typedef struct {
 } PopUps;
 
 typedef struct {
+    String_Builder text;
+    bool active;
+} Input;
+
+typedef struct {
     Free_Glyph_Atlas *atlas;
 
     String_Builder data;
@@ -48,9 +53,9 @@ typedef struct {
     Tokens tokens;
     String_Builder file_path;
     PopUps popUps;
+    Input input;
 
     bool searching;
-    String_Builder search;
 
     bool selection;
     size_t select_begin;
@@ -67,6 +72,8 @@ Errno editor_load_from_file(Editor *editor, const char *file_path);
 
 Uint32 editor_add_popup(Editor *editor, PopUp *popUp);
 void editor_remove_popup(Editor *editor, Uint32 uid);
+
+void editor_start_input(Editor *editor);
 
 void editor_backspace(Editor *editor);
 void editor_delete(Editor *editor);
