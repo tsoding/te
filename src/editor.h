@@ -40,12 +40,15 @@ typedef struct {
     size_t count;
 } PopUps;
 
+struct Editor_s;
+
 typedef struct {
     String_Builder text;
     bool active;
+    void (*onDone)(struct Editor_s *);
 } Input;
 
-typedef struct {
+typedef struct Editor_s {
     Free_Glyph_Atlas *atlas;
 
     String_Builder data;
@@ -67,7 +70,7 @@ typedef struct {
 } Editor;
 
 Errno editor_save_as(Editor *editor, const char *file_path);
-Errno editor_save(const Editor *editor);
+Errno editor_save(Editor *editor);
 Errno editor_load_from_file(Editor *editor, const char *file_path);
 
 Uint32 editor_add_popup(Editor *editor, PopUp *popUp);

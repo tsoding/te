@@ -52,6 +52,12 @@ static Simple_Renderer sr = {0};
 static Editor editor = {0};
 static File_Browser fb = {0};
 
+static void onSaveInputPath(Editor *e)
+{
+    sb_append_null(&e->input.text);
+    editor_save_as(e, e->input.text.items);
+}
+
 int main(int argc, char **argv)
 {
     Errno err;
@@ -269,23 +275,18 @@ int main(int argc, char **argv)
                     }
                     break;
 
-                    case SDLK_F2: {
-                        if (editor.file_path.count > 0) {
-                            err = editor_save(&editor);
-                            if (err != 0) {
-                                flash_error(&editor, "Can't save: %s", strerror(err));
+                    case SDLK_s: {
+                        if (event.key.keysym.mod & KMOD_CTRL) {
+                            // TODO: ctrl+shift+s
+                            if (editor.file_path.count > 0) {
+                                err = editor_save(&editor);
+                                if (err != 0) {
+                                    flash_error(&editor, "Can't save: %s", strerror(err));
+                                }
                             } else {
-                                PopUp p;
-                                p.msg = "Saved file!";
-                                p.msg_size = strlen(p.msg);
-                                p.color = hex_to_vec4f(0x7DDA58FF);
-                                p.when = SDL_GetTicks();
-                                p.lasts = 1000;
-                                (void) editor_add_popup(&editor, &p);
+                                editor_start_input(&editor);
+                                editor.input.onDone = onSaveInputPath;
                             }
-                        } else {
-                            // TODO: ask the user for the path to save to in this situation
-                            flash_error(&editor, "Nowhere to save the text");
                         }
                     }
                     break;
@@ -305,6 +306,8 @@ int main(int argc, char **argv)
                             editor_stop_search(&editor);
                         } else if (editor.input.active) {
                             editor.input.active = false;
+                            if (editor.input.onDone)
+                                editor.input.onDone(&editor);
                         } else {
                             if (editor.selection) {
                                 editor_delete_selection(&editor);

@@ -88,14 +88,33 @@ Errno editor_save_as(Editor *e, const char *file_path)
     e->file_path.count = 0;
     sb_append_cstr(&e->file_path, file_path);
     sb_append_null(&e->file_path);
+
+    PopUp p;
+    p.msg = "Saved file!";
+    p.msg_size = strlen(p.msg);
+    p.color = hex_to_vec4f(0x7DDA58FF);
+    p.when = SDL_GetTicks();
+    p.lasts = 1000;
+    (void) editor_add_popup(e, &p);
+
     return 0;
 }
 
-Errno editor_save(const Editor *e)
+Errno editor_save(Editor *e)
 {
     assert(e->file_path.count > 0);
     printf("Saving as %s...\n", e->file_path.items);
-    return write_entire_file(e->file_path.items, e->data.items, e->data.count);
+    Errno err = write_entire_file(e->file_path.items, e->data.items, e->data.count);
+    if (err == 0) {
+        PopUp p;
+        p.msg = "Saved file!";
+        p.msg_size = strlen(p.msg);
+        p.color = hex_to_vec4f(0x7DDA58FF);
+        p.when = SDL_GetTicks();
+        p.lasts = 1000;
+        (void) editor_add_popup(e, &p);
+    }
+    return err;
 }
 
 Errno editor_load_from_file(Editor *e, const char *file_path)
@@ -581,6 +600,7 @@ void editor_stop_search(Editor *e)
 {
     e->searching = false;
     e->input.active = false;
+    e->input.onDone = NULL;
 }
 
 bool editor_search_matches_at(Editor *e, size_t pos)
@@ -688,6 +708,7 @@ void flash_error_str(Editor *editor, const char *str)
 void editor_start_input(Editor *editor)
 {
     editor->input.active = true;
+    editor->input.onDone = NULL;
     if (editor->input.text.items) {
         free(editor->input.text.items);
         editor->input.text = (String_Builder){0};
