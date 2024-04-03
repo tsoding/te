@@ -94,12 +94,12 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
     Errno result = 0;
     FILE *f = NULL;
 
-    f = fopen(file_path, "r");
+    f = fopen(file_path, "rb");
     if (f == NULL) {
         f = fopen(file_path, "w");
         if (f == NULL) return_defer(errno);
         fclose(f);
-        f = fopen(file_path, "r");
+        f = fopen(file_path, "rb");
     }
 
     size_t size;
@@ -138,10 +138,16 @@ Vec4f hex_to_vec4f(uint32_t color)
 Errno type_of_file(const char *file_path, File_Type *ft)
 {
 #ifdef _WIN32
-    if (GetFileAttributesA(file_path) & FILE_ATTRIBUTE_DIRECTORY) {
+    DWORD file_obj_type = GetFileAttributesA(file_path);
+    if (file_obj_type & FILE_ATTRIBUTE_DIRECTORY) {
         *ft = FT_DIRECTORY;
-    } else {
+    }
+    // I have no idea why, but a 'normal' file is considered an archive file?
+    else if (file_obj_type & FILE_ATTRIBUTE_ARCHIVE) {
         *ft = FT_REGULAR;
+    }
+    else {
+        *ft = FT_OTHER;
     }
 #else
     struct stat sb = {0};

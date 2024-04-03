@@ -29,10 +29,11 @@ static const char *shader_type_as_cstr(GLuint shader)
     }
 }
 
-static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLuint *shader)
+static bool compile_shader_source(String_Builder source, GLenum shader_type, GLuint *shader)
 {
     *shader = glCreateShader(shader_type);
-    glShaderSource(*shader, 1, &source, NULL);
+    GLint source_count=(GLint)source.count;
+    glShaderSource(*shader, 1, &source.items, &source_count);
     glCompileShader(*shader);
 
     GLint compiled = 0;
@@ -62,7 +63,7 @@ static bool compile_shader_file(const char *file_path, GLenum shader_type, GLuin
     }
     sb_append_null(&source);
 
-    if (!compile_shader_source(source.items, shader_type, shader)) {
+    if (!compile_shader_source(source, shader_type, shader)) {
         fprintf(stderr, "ERROR: failed to compile `%s` shader file\n", file_path);
         return_defer(false);
     }

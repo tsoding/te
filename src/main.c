@@ -442,6 +442,18 @@ int main(int argc, char **argv)
             }
             break;
 
+	        case SDL_WINDOWEVENT: {
+	            switch(event.window.event) {
+	            case SDL_WINDOWEVENT_RESIZED: {
+	                int w, h;
+	                SDL_GetWindowSize(window, &w, &h);
+	                glViewport(0, 0, w, h);
+  	            }
+	            break;
+	            }
+	        }
+	        break;
+
             case SDL_TEXTINPUT: {
                 if (editor.input.active) {
                     sb_append_cstr(&editor.input.text, event.text.text);
@@ -462,13 +474,6 @@ int main(int argc, char **argv)
             }
             break;
             }
-        }
-
-        {
-            int w, h;
-            SDL_GetWindowSize(window, &w, &h);
-            // TODO(#19): update the viewport and the resolution only on actual window change
-            glViewport(0, 0, w, h);
         }
 
         Vec4f bg = hex_to_vec4f(0x181818FF);
