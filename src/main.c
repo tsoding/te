@@ -439,17 +439,17 @@ int main(int argc, char **argv)
             }
             break;
 
-	        case SDL_WINDOWEVENT: {
-	            switch(event.window.event) {
-	            case SDL_WINDOWEVENT_RESIZED: {
-	                int w, h;
-	                SDL_GetWindowSize(window, &w, &h);
-	                glViewport(0, 0, w, h);
-  	            }
-	            break;
-	            }
-	        }
-	        break;
+            case SDL_WINDOWEVENT: {
+                switch(event.window.event) {
+                case SDL_WINDOWEVENT_RESIZED: {
+                    int w, h;
+                    SDL_GetWindowSize(window, &w, &h);
+                    glViewport(0, 0, w, h);
+                  }
+                break;
+                }
+            }
+            break;
 
             case SDL_TEXTINPUT: {
                 if (editor.input.active) {

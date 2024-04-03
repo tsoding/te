@@ -70,6 +70,9 @@ Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
     if (f == NULL) return_defer(errno);
 
     fwrite(buf, 1, buf_size, f);
+    if (buf[buf_size - 1] != '\n') {
+        fputc('\n', f);
+    }
     if (ferror(f)) return_defer(errno);
 
 defer:
@@ -106,13 +109,20 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
     Errno err = file_size(f, &size);
     if (err != 0) return_defer(err);
 
-    if (sb->capacity < size) {
-        sb->capacity = size;
-        sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items));
-        assert(sb->items != NULL && "Buy more RAM lol");
+    int c;
+    while ((c = fgetc(f)) != EOF) {
+        if (c == '\t') {
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+        } else if (c == '\r') {
+            continue;
+        } else {
+            da_append(sb, (char) c);
+        }
     }
 
-    fread(sb->items, size, 1, f);
     if (ferror(f)) return_defer(errno);
     sb->count = size;
 
