@@ -87,6 +87,7 @@ void editor_delete(Editor *editor);
 void editor_delete_selection(Editor *editor);
 size_t editor_cursor_row(const Editor *e);
 
+void editor_goto(Editor *e, size_t line, size_t col);
 void editor_move_line_up(Editor *e);
 void editor_move_line_down(Editor *e);
 void editor_move_char_left(Editor *e);

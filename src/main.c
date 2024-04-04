@@ -58,6 +58,31 @@ static void onSaveInputPath(Editor *e)
     editor_save_as(e, e->input.text.items);
 }
 
+static void onGoToLine(Editor *e)
+{
+    sb_append_null(&e->input.text);
+    const char *linestr = e->input.text.items;
+    char *end;
+    size_t linenum = strtol(linestr, &end, 10);
+    size_t colnum = 0;
+    if (*end == ':') {
+        char *end2;
+        colnum = strtol(end + 1, &end2, 10);
+        if (*end2 != '\0')
+            goto invalid_input;
+    } else if (*end != '\0')
+        goto invalid_input;
+    if (linenum == 0)
+        linenum = 1;
+    if (colnum == 0)
+        colnum = 1;
+    editor_goto(e, linenum - 1, colnum - 1);
+    return;
+
+invalid_input:
+    flash_error(e, "Invalid line(:col)!");
+}
+
 int main(int argc, char **argv)
 {
     Errno err;
@@ -270,7 +295,7 @@ int main(int argc, char **argv)
                             if (event.key.keysym.mod & KMOD_SHIFT) {
                                 editor_start_input(&editor);
                                 editor.input.onDone = onSaveInputPath;
-                                editor.input.hint = "path:";
+                                editor.input.hint = "path: ";
                                 editor.input.hint_len = strlen(editor.input.hint);
                             } else if (editor.file_path.count > 0) {
                                 err = editor_save(&editor);
@@ -281,7 +306,7 @@ int main(int argc, char **argv)
                                 editor_start_input(&editor);
                                 editor.input.onDone = onSaveInputPath;
                                 editor.input.required = true;
-                                editor.input.hint = "path:";
+                                editor.input.hint = "path: ";
                                 editor.input.hint_len = strlen(editor.input.hint);
                             }
                         }
@@ -389,6 +414,16 @@ int main(int argc, char **argv)
                     case SDLK_v: {
                         if (event.key.keysym.mod & KMOD_CTRL) {
                             editor_clipboard_paste(&editor);
+                        }
+                    }
+                    break;
+
+                    case SDLK_g: {
+                        if (event.key.keysym.mod & KMOD_CTRL) {
+                            editor_start_input(&editor);
+                            editor.input.onDone = onGoToLine;
+                            editor.input.hint = "line: ";
+                            editor.input.hint_len = strlen(editor.input.hint);
                         }
                     }
                     break;

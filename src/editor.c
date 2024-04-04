@@ -148,6 +148,22 @@ size_t editor_cursor_row(const Editor *e)
     return e->lines.count - 1;
 }
 
+void editor_goto(Editor *e, size_t line, size_t col)
+{
+    if (e->lines.count == 0)
+        line = 0;
+    else if (line >= e->lines.count)
+        line = e->lines.count - 1;
+
+    Line target_line = e->lines.items[line];
+    size_t target_line_size = target_line.end - target_line.begin;
+    if (target_line_size == 0)
+        col = 0;
+    else if (col >= target_line_size)
+        col = target_line_size - 1;
+    e->cursor = target_line.begin + col;
+}
+
 void editor_move_line_up(Editor *e)
 {
     editor_stop_search(e);
@@ -628,7 +644,7 @@ void editor_start_search(Editor *e)
     } else {
         e->searching = true;
         editor_start_input(e);
-        e->input.hint = "find:";
+        e->input.hint = "find: ";
         e->input.hint_len = strlen(e->input.hint);
         if (e->selection) {
             size_t begin = e->select_begin;
