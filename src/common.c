@@ -69,8 +69,11 @@ Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
     f = fopen(file_path, "wb");
     if (f == NULL) return_defer(errno);
 
-    fwrite(buf, 1, buf_size, f);
-    if (buf[buf_size - 1] != '\n') {
+    // TODO: why are there extra nulls at the end of the buf (buf_size)??
+    // that's why we strlen it here to get the size without these nulls
+    size_t real_buf_size = strlen(buf);
+    fwrite(buf, 1, real_buf_size, f);
+    if (get_last(buf, real_buf_size) != '\n') {
         fputc('\n', f);
     }
     if (ferror(f)) return_defer(errno);
@@ -103,6 +106,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
         if (f == NULL) return_defer(errno);
         fclose(f);
         f = fopen(file_path, "rb");
+        if (f == NULL) return_defer(errno);
     }
 
     size_t size;
@@ -110,7 +114,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
     if (err != 0) return_defer(err);
 
     int c;
-    while ((c = fgetc(f)) != EOF) {
+    while ((c = fgetc(f)) != EOF && c != '\0') {
         if (c == '\t') {
             da_append(sb, ' ');
             da_append(sb, ' ');

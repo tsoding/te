@@ -92,7 +92,7 @@ Errno editor_save_as(Editor *e, const char *file_path)
     PopUp p;
     p.msg = "Saved file!";
     p.msg_size = strlen(p.msg);
-    p.color = hex_to_vec4f(0x7DDA58FF);
+    p.color = hex_to_vec4f(0x009966FF);
     p.when = SDL_GetTicks();
     p.lasts = 1000;
     (void) editor_add_popup(e, &p);
@@ -109,7 +109,7 @@ Errno editor_save(Editor *e)
         PopUp p;
         p.msg = "Saved file!";
         p.msg_size = strlen(p.msg);
-        p.color = hex_to_vec4f(0x7DDA58FF);
+        p.color = hex_to_vec4f(0x009966FF);
         p.when = SDL_GetTicks();
         p.lasts = 1000;
         (void) editor_add_popup(e, &p);
@@ -146,6 +146,22 @@ size_t editor_cursor_row(const Editor *e)
         }
     }
     return e->lines.count - 1;
+}
+
+void editor_goto(Editor *e, size_t line, size_t col)
+{
+    if (e->lines.count == 0)
+        line = 0;
+    else if (line >= e->lines.count)
+        line = e->lines.count - 1;
+
+    Line target_line = e->lines.items[line];
+    size_t target_line_size = target_line.end - target_line.begin;
+    if (target_line_size == 0)
+        col = 0;
+    else if (col >= target_line_size)
+        col = target_line_size - 1;
+    e->cursor = target_line.begin + col;
 }
 
 void editor_move_line_up(Editor *e)
@@ -479,7 +495,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
         {
             simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
-            Vec4f bg = vec4fs(1);
+            Vec4f bg = hex_to_vec4f(0xe7e7e7ff);
             Vec2f p1 = vec2f(0, -60.0f * scale);
             Vec2f s = vec2f(w * oscale, 60.0f + 60.0f * scale);
             simple_renderer_solid_rect(sr, p1, s, bg);
@@ -492,7 +508,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         if (editor->input.active) {
             {
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = hex_to_vec4f(0x7C7A7AFF);
+                Vec4f color = hex_to_vec4f(0x5b5b5bFF);
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
                                                    editor->input.hint,
@@ -504,7 +520,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
             {
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = vec4fs(0);
+                Vec4f color = hex_to_vec4f(0x181818FF);
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
                                                    editor->input.text.items,
@@ -515,12 +531,12 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         }
         // Render additional info
         else {
-            static char str[200]; // TODO
+            static char str[200];
             sprintf(str, "%s  %zu / %zu", file_ext_str(editor->file_ext), editor_cursor_row(editor) + 1, editor->lines.count);
 
             {
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = vec4fs(0);
+                Vec4f color = hex_to_vec4f(0x181818FF);
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
                                                    str,
@@ -620,7 +636,7 @@ void editor_start_search(Editor *e)
     } else {
         e->searching = true;
         editor_start_input(e);
-        e->input.hint = "find:";
+        e->input.hint = "find: ";
         e->input.hint_len = strlen(e->input.hint);
         if (e->selection) {
             size_t begin = e->select_begin;
@@ -736,7 +752,7 @@ void flash_error_str(Editor *editor, const char *str)
     PopUp p;
     p.msg = str;
     p.msg_size = strlen(str);
-    p.color = hex_to_vec4f(0xD20103FF);
+    p.color = hex_to_vec4f(0xff2400ff);
     p.when = SDL_GetTicks();
     p.lasts = 2000;
 

@@ -88,7 +88,9 @@ typedef struct {
         size_t n = strlen(s);     \
         da_append_many(sb, s, n); \
     } while (0)
-#define sb_append_null(sb) da_append_many(sb, "", 1)
+#define get_last(items, count) ((count) > 0 ? (items)[(count) - 1] : '\0')
+#define sb_get_last(sb) get_last((sb).items, (sb).count)
+#define sb_append_null(sb) da_append_many((sb), "", 1)
 
 #define sb_to_sv(sb) sv_from_parts((sb).items, (sb).count)
 
