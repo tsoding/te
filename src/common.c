@@ -70,7 +70,7 @@ Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
     if (f == NULL) return_defer(errno);
 
     fwrite(buf, 1, buf_size, f);
-    if (buf_size != 0 && buf[buf_size - 1] != '\n') {
+    if (get_last(buf, buf_size) != '\n') {
         fputc('\n', f);
     }
     if (ferror(f)) return_defer(errno);
@@ -103,6 +103,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
         if (f == NULL) return_defer(errno);
         fclose(f);
         f = fopen(file_path, "rb");
+        if (f == NULL) return_defer(errno);
     }
 
     size_t size;
@@ -110,7 +111,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
     if (err != 0) return_defer(err);
 
     int c;
-    while ((c = fgetc(f)) != EOF) {
+    while ((c = fgetc(f)) != EOF && c != '\0') {
         if (c == '\t') {
             da_append(sb, ' ');
             da_append(sb, ' ');
