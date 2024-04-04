@@ -99,7 +99,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
 
     f = fopen(file_path, "rb");
     if (f == NULL) {
-        f = fopen(file_path, "w");
+        f = fopen(file_path, "wb");
         if (f == NULL) return_defer(errno);
         fclose(f);
         f = fopen(file_path, "rb");

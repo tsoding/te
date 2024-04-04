@@ -4,3 +4,6 @@
 [submodule "dependencies/freetype"]
 	path = dependencies/freetype
 	url = https://github.com/ubawurinna/freetype-windows-binaries.git
+[submodule "dependencies/miniconf"]
+	path = dependencies/miniconf
+	url = https://github.com/alex-s168/miniconf.git

@@ -515,14 +515,6 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         }
         // Render additional info
         else {
-            Simple_Camera oldCam = sr->cam;
-            sr->cam = (Simple_Camera) {
-                .pos = vec2f((float) w / 2 * oscale, ((float) h / 2 * oscale) - 60.0f * scale),
-                .scale = scale,
-                .scale_vel = 0.0f,
-                .vel = vec2f(0, 0)
-            };
-
             static char str[200]; // TODO
             sprintf(str, "%s  %zu / %zu", file_ext_str(editor->file_ext), editor_cursor_row(editor) + 1, editor->lines.count);
 
