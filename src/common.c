@@ -70,7 +70,7 @@ Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
     if (f == NULL) return_defer(errno);
 
     fwrite(buf, 1, buf_size, f);
-    if (buf[buf_size - 1] != '\n') {
+    if (buf_size != 0 && buf[buf_size - 1] != '\n') {
         fputc('\n', f);
     }
     if (ferror(f)) return_defer(errno);
