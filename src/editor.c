@@ -353,7 +353,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                         atlas, editor->data.items + select_begin_chr, select_end_chr - select_begin_chr,
                         &select_end_scr);
 
-                    Vec4f selection_color = vec4f(.25, .25, .25, 1);
+                    Vec4f selection_color = editor->configs.editor.selection;
                     simple_renderer_solid_rect(sr, select_begin_scr, vec2f(select_end_scr.x - select_begin_scr.x, FREE_GLYPH_FONT_SIZE), selection_color);
                 }
             }
@@ -379,7 +379,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
     {
         if (editor->searching && editor_search_matches_at(editor, editor->cursor)) {
             simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
-            Vec4f selection_color = vec4f(.10, .10, .25, 1);
+            Vec4f selection_color = editor->configs.editor.search.selection;
             Vec2f p1 = cursor_pos;
             Vec2f p2 = p1;
             free_glyph_atlas_measure_line_sized(editor->atlas, editor->input.text.items, editor->input.text.count, &p2);
@@ -405,9 +405,9 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
     // Render cursor
     simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
     {
-        float CURSOR_WIDTH = 5.0f;
-        Uint32 CURSOR_BLINK_THRESHOLD = 500;
-        Uint32 CURSOR_BLINK_PERIOD = 1000;
+        float CURSOR_WIDTH = editor->configs.editor.cursor.width;
+        Uint32 CURSOR_BLINK_THRESHOLD = editor->configs.editor.cursor.blink_threshold;
+        Uint32 CURSOR_BLINK_PERIOD = editor->configs.editor.cursor.blink_period;
         Uint32 t = SDL_GetTicks() - editor->last_stroke;
 
         sr->verticies_count = 0;
@@ -415,7 +415,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             simple_renderer_solid_rect(
                 sr,
                 cursor_pos, vec2f(CURSOR_WIDTH, FREE_GLYPH_FONT_SIZE),
-                vec4fs(1));
+                editor->configs.editor.cursor.color);
         }
 
         simple_renderer_flush(sr);
@@ -1074,6 +1074,24 @@ bool editor_load_config(Editor *editor, const char *config_path) {
 
         config_destroy(&tokens);
     }
+
+    editor->configs.editor.cursor.blink_threshold = config_get_long_at(edit, "cursor/blink/treshold", &ok);
+    CHECK_NF("cursor/blink/treshold")
+
+    editor->configs.editor.cursor.blink_period = config_get_long_at(edit, "cursor/blink/period", &ok);
+    CHECK_NF("cursor/blink/period")
+
+    editor->configs.editor.cursor.color = hex_to_vec4f(config_get_long_at(edit, "cursor/color", &ok));
+    CHECK_NF("cursor/color")
+
+    editor->configs.editor.cursor.width = config_get_double_at(edit, "cursor/width", &ok);
+    CHECK_NF("cursor/width")
+
+    editor->configs.editor.selection = hex_to_vec4f(config_get_long_at(edit, "selection/color", &ok));
+    CHECK_NF("selection/color")
+
+    editor->configs.editor.search.selection = hex_to_vec4f(config_get_long_at(edit, "search selection/color", &ok));
+    CHECK_NF("search selection")
 
 #undef CHECK_NF
 
