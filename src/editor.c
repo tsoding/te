@@ -164,7 +164,7 @@ void editor_move_line_up(Editor *e)
     editor_stop_search(e);
 
     size_t cursor_row = editor_cursor_row(e);
-    size_t cursor_col = e->cursor - e->lines.items[cursor_row].begin;
+    size_t cursor_col = EDITOR_CURSOR_COL(cursor_row,e);
     if (cursor_row > 0) {
         Line next_line = e->lines.items[cursor_row - 1];
         size_t next_line_size = next_line.end - next_line.begin;
@@ -178,7 +178,7 @@ void editor_move_line_down(Editor *e)
     editor_stop_search(e);
 
     size_t cursor_row = editor_cursor_row(e);
-    size_t cursor_col = e->cursor - e->lines.items[cursor_row].begin;
+    size_t cursor_col = EDITOR_CURSOR_COL(cursor_row,e);
     if (cursor_row < e->lines.count - 1) {
         Line next_line = e->lines.items[cursor_row + 1];
         size_t next_line_size = next_line.end - next_line.begin;
@@ -480,7 +480,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
     // Render bottom bar
     {
-        float scale = 0.6f;
+        float scale = (float) editor->configs.editor.bottom.scale;
         float oscale = 1.0f / scale;
 
         Simple_Camera oldCam = sr->cam;
@@ -491,9 +491,9 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             .vel = vec2f(0, 0)
         };
 
-        {
+        if (editor->configs.editor.bottom.stats.enabled || editor->input.active) {
             simple_renderer_set_shader(sr, SHADER_FOR_COLOR);
-            Vec4f bg = hex_to_vec4f(0xe7e7e7ff);
+            Vec4f bg = editor->configs.editor.bottom.background;
             Vec2f p1 = vec2f(0, -60.0f * scale);
             Vec2f s = vec2f(w * oscale, 60.0f + 60.0f * scale);
             simple_renderer_solid_rect(sr, p1, s, bg);
@@ -504,21 +504,35 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
         // Render input
         if (editor->input.active) {
-            {
+            do {
+                char *hint = fmt_fmt_fmt(editor->configs.editor.bottom.input.fmt_hint, (PlaceholderList) {
+                    .elems = (Placeholder[]) {
+                        PLACEHOLDER_STR("hint", editor->input.hint),
+                    },
+                    .elems_size = 1
+                });
+
+                if (hint == NULL) {
+                    fprintf(stderr, "\"editor/bottom bar/input/hint/fmt\" format error!\n");
+                    break;
+                }
+
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = hex_to_vec4f(0x5b5b5bFF);
+                Vec4f color = editor->configs.editor.bottom.input.color_hint;
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
-                                                   editor->input.hint,
-                                                   editor->input.hint_len,
+                                                   hint,
+                                                   strlen(hint),
                                                    &pos, color);
-                x = pos.x;
+                x = pos.x + editor->configs.editor.bottom.input.spacing;
                 simple_renderer_flush(sr);
-            }
+
+                free(hint);
+            } while (0);
 
             {
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = hex_to_vec4f(0x181818FF);
+                Vec4f color = editor->configs.editor.bottom.input.color;
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
                                                    editor->input.text.items,
@@ -528,13 +542,30 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             }
         }
         // Render additional info
-        else {
-            static char str[200];
-            sprintf(str, "%s  %zu / %zu", file_ext_str(editor->file_ext), editor_cursor_row(editor) + 1, editor->lines.count);
+        else if (editor->configs.editor.bottom.stats.enabled) do {
+            const size_t cursor_row = editor_cursor_row(editor);
+            const size_t cursor_col = EDITOR_CURSOR_COL(cursor_row,editor);
+
+            char *str = fmt_fmt_fmt(editor->configs.editor.bottom.stats.fmt, (PlaceholderList) {
+                .elems = (Placeholder[]) {
+                    PLACEHOLDER_STR("lang", file_ext_str(editor->file_ext)),
+
+                    PLACEHOLDER_LONG("row", cursor_row + 1),
+                    PLACEHOLDER_LONG("max-row", editor->lines.count),
+
+                    PLACEHOLDER_LONG("col", cursor_col + 1)
+                },
+                .elems_size = 4
+            });
+
+            if (str == NULL) {
+                fprintf(stderr, "\"editor/bottom bar/stats/fmt\" format error!\n");
+                break;
+            }
 
             {
                 simple_renderer_set_shader(sr, SHADER_FOR_TEXT);
-                Vec4f color = hex_to_vec4f(0x181818FF);
+                Vec4f color = editor->configs.editor.bottom.stats.color;
                 Vec2f pos = vec2f(x, -20 * scale);
                 free_glyph_atlas_render_line_sized(atlas, sr,
                                                    str,
@@ -543,7 +574,9 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 x = pos.x;
                 simple_renderer_flush(sr);
             }
-        }
+
+            free(str);
+        } while (0);
 
         sr->cam = oldCam;
     }
@@ -869,47 +902,31 @@ bool editor_load_config(Editor *editor, const char *config_path) {
             return false;
         }
 
+#define CHECK_NF(what) if (!ok) { \
+    fprintf(stderr, "\"window/" what "\" not found in config!"); \
+    config_destroy(&window); \
+    return false; \
+}
+
         editor->configs.window.font = config_get_str_at(window, "font", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/font\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("font")
 
         editor->configs.window.title = config_get_str_at(window, "title", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/title\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("title");
 
         editor->configs.window.x = config_get_long_at(window, "x", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/x\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("x");
 
         editor->configs.window.y = config_get_long_at(window, "y", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/y\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("y");
 
         editor->configs.window.w = config_get_long_at(window, "w", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/w\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("w");
 
         editor->configs.window.h = config_get_long_at(window, "h", &ok);
-        if (!ok) {
-            fprintf(stderr, "\"window/h\" not found in config!");
-            config_destroy(&window);
-            return false;
-        }
+        CHECK_NF("h");
+
+#undef CHECK_NF
 
         config_destroy(&window);
     }
@@ -964,5 +981,84 @@ bool editor_load_config(Editor *editor, const char *config_path) {
         }
     }
 
+    Config edit;
+    config_init(&edit);
+    bool ok;
+    config_child(&edit, editor->configs.cfg, "editor", &ok);
+    if (!ok) {
+        fprintf(stderr, "\"editor\" not found in config!");
+        config_destroy(&edit);
+        return false;
+    }
+
+#define CHECK_NF(what) if (!ok) { \
+    fprintf(stderr, "\"editor/" what "\" not found in config!"); \
+    config_destroy(&edit); \
+    return false; \
+}
+
+    editor->configs.editor.background = hex_to_vec4f(config_get_long_at(edit, "background", &ok));
+    CHECK_NF("background")
+
+    // TODO
+    // we should get each sub config manually but I'm lazy
+
+    editor->configs.editor.bottom.scale = config_get_double_at(edit, "bottom bar/scale", &ok);
+    CHECK_NF("bottom bar/scale")
+
+    editor->configs.editor.bottom.background = hex_to_vec4f(config_get_long_at(edit, "bottom bar/background", &ok));
+    CHECK_NF("bottom bar/background")
+
+    editor->configs.editor.bottom.input.color_hint = hex_to_vec4f(config_get_long_at(edit, "bottom bar/input/hint/color", &ok));
+    CHECK_NF("bottom bar/input/hint/color")
+
+    editor->configs.editor.bottom.input.spacing = config_get_double_at(edit, "bottom bar/input/hint/spacing", &ok);
+    CHECK_NF("bottom bar/input/hint/spacing")
+
+    {
+        const char *fmt_str = config_get_str_at(edit, "bottom bar/input/hint/fmt", &ok);
+        CHECK_NF("bottom bar/input/hint/fmt")
+
+        free(editor->configs.editor.bottom.input.fmt_str);
+        fmt_destroy(editor->configs.editor.bottom.input.fmt_hint);
+
+        size_t fmt_str_len = strlen(fmt_str);
+        char *fmt_str_copy = malloc(fmt_str_len + 1);
+        memcpy(fmt_str_copy, fmt_str, fmt_str_len + 1);
+
+        editor->configs.editor.bottom.input.fmt_hint = fmt_compile(fmt_str_copy);
+        editor->configs.editor.bottom.input.fmt_str = fmt_str_copy;
+    }
+
+    editor->configs.editor.bottom.input.color = hex_to_vec4f(config_get_long_at(edit, "bottom bar/input/content/color", &ok));
+    CHECK_NF("bottom bar/input/content/color")
+
+    bool status_bar_enabled = config_get_bool_at(edit, "bottom bar/stats/enabled", &ok);
+    CHECK_NF("bottom bar/stats/enabled")
+    editor->configs.editor.bottom.stats.enabled = status_bar_enabled;
+
+    if (status_bar_enabled) {
+        {
+            const char *fmt_str = config_get_str_at(edit, "bottom bar/stats/fmt", &ok);
+            CHECK_NF("bottom bar/stats/fmt")
+
+            free(editor->configs.editor.bottom.stats.fmt_str);
+            fmt_destroy(editor->configs.editor.bottom.stats.fmt);
+
+            size_t fmt_str_len = strlen(fmt_str);
+            char *fmt_str_copy = malloc(fmt_str_len + 1);
+            memcpy(fmt_str_copy, fmt_str, fmt_str_len + 1);
+
+            editor->configs.editor.bottom.stats.fmt = fmt_compile(fmt_str_copy);
+            editor->configs.editor.bottom.stats.fmt_str = fmt_str_copy;
+        }
+
+        editor->configs.editor.bottom.stats.color = hex_to_vec4f(config_get_long_at(edit, "bottom bar/stats/color", &ok));
+        CHECK_NF("bottom bar/stats/color")
+    }
+
+#undef CHECK_NF
+
+    config_destroy(&edit);
     return true;
 }

@@ -538,7 +538,7 @@ int main(int argc, char **argv)
             }
         }
 
-        Vec4f bg = hex_to_vec4f(0x181818FF);
+        Vec4f bg = editor.configs.editor.background;
         glClearColor(bg.x, bg.y, bg.z, bg.w);
         glClear(GL_COLOR_BUFFER_BIT);
 

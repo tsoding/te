@@ -87,12 +87,15 @@ typedef struct {
 			struct {
 				Vec4f color_hint;
 				Vec4f color;
+                char *fmt_str;
 				Fmt fmt_hint;
+                double spacing;
 			} input;
 
 			struct {
 				bool enabled;
 				Fmt fmt;
+                char *fmt_str;
 				Vec4f color;
 			} stats;
 		} bottom;
@@ -137,6 +140,8 @@ typedef struct Editor_s {
 
     EditorConfig configs;
 } Editor;
+
+#define EDITOR_CURSOR_COL(cursor_row,editor) (editor->cursor - editor->lines.items[cursor_row].begin)
 
 bool editor_load_config(Editor *editor, const char *config_path);
 

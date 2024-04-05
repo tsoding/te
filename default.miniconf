@@ -45,13 +45,14 @@ editor:
         background: xE7E7E7FF
         input:
             hint:
-                color: x5B5B5BFF
-                fmt:   "({hint}) {msg}
+                color:   x5B5B5BFF
+                fmt:     "({hint})
+                spacing: 20.0
             content:
                 color: x181818FF
         stats:
             enabled: true
-            fmt: "{lang}  {line}/{col}
+            fmt: "{lang} {row}:{col} / {max-row}
             color: x181818FF
     tokens:
         preproc: x95A99FFF
