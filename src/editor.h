@@ -10,6 +10,7 @@
 
 #include <SDL2/SDL.h>
 #include <miniconf.h>
+#include <minifmt.h>
 
 typedef struct {
     size_t begin;
@@ -32,6 +33,7 @@ typedef struct {
     Uint32 uid;
     const char *msg;
     size_t msg_size;
+    bool free_msg;
     Vec4f color;
     Uint32 when;
     Uint32 lasts;
@@ -52,6 +54,65 @@ typedef struct {
 	const char *hint;
 	size_t hint_len;
 } Input;
+
+typedef struct {
+    Config     cfg;
+    AllocGroup alloc;
+
+	struct {
+		const char *font;
+		const char *title;
+		size_t x;
+		size_t y;
+		size_t w;
+		size_t h;
+	} window;
+
+	struct {
+		double scale;
+		long   fade_in;
+	} popup;
+
+	Config popup_messages;
+
+	Config input_hints;
+
+	struct {
+		Vec4f background;
+
+		struct {
+			double scale;
+			Vec4f background;
+
+			struct {
+				Vec4f color_hint;
+				Vec4f color;
+				Fmt fmt_hint;
+			} input;
+
+			struct {
+				bool enabled;
+				Fmt fmt;
+				Vec4f color;
+			} stats;
+		} bottom;
+
+		Vec4f tokens[TOKEN_KIND_SIZE];
+
+		struct {
+			long blink_threshold;
+			long blink_period;
+			Vec4f color;
+			double width;
+		} cursor;
+
+		Vec4f selection;
+
+		struct {
+			Vec4f selection;
+		} search;
+	} editor;
+} EditorConfig;
 
 typedef struct Editor_s {
     Free_Glyph_Atlas *atlas;
@@ -74,10 +135,7 @@ typedef struct Editor_s {
 
     String_Builder clipboard;
 
-    struct {
-        Config     cfg;
-        AllocGroup alloc;
-    } configs;
+    EditorConfig configs;
 } Editor;
 
 bool editor_load_config(Editor *editor, const char *config_path);
@@ -88,6 +146,8 @@ Errno editor_load_from_file(Editor *editor, const char *file_path);
 
 Uint32 editor_add_popup(Editor *editor, PopUp *popUp);
 void editor_remove_popup(Editor *editor, Uint32 uid);
+void editor_configured_popup(Editor *editor, const char *type, PlaceholderList placeholders);
+const char *editor_configured_inline_hint(Editor *editor, const char *type);
 
 void editor_start_input(Editor *editor);
 

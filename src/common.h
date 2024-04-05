@@ -6,8 +6,6 @@
 #include <stdint.h>
 #include "./la.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
 #define FPS 60
 #define DELTA_TIME (1.0f / FPS)
 #define CURSOR_OFFSET 0.13f

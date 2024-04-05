@@ -22,7 +22,8 @@
 #include <filelib.h>
 #define MINICONF_IMPL
 #include <miniconf.h>
-#include <memlib.h>
+#define MINIFMT_IMPL
+#include <minifmt.h>
 
 static Arena temporary_arena = {0};
 
@@ -69,9 +70,10 @@ defer:
 Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
 {
     Errno result = 0;
-    FILE *f = NULL;
+    if (buf == NULL)
+        return result;
 
-    f = fopen(file_path, "wb");
+    FILE *f = fopen(file_path, "wb");
     if (f == NULL) return_defer(errno);
 
     // TODO: why are there extra nulls at the end of the buf (buf_size)??

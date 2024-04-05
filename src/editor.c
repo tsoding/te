@@ -77,9 +77,6 @@ void editor_delete_selection(Editor *e)
     editor_retokenize(e);
 }
 
-// TODO: make sure that you always have new line at the end of the file while saving
-// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_206
-
 Errno editor_save_as(Editor *e, const char *file_path)
 {
     printf("Saving as %s...\n", file_path);
@@ -89,13 +86,12 @@ Errno editor_save_as(Editor *e, const char *file_path)
     sb_append_cstr(&e->file_path, file_path);
     sb_append_null(&e->file_path);
 
-    PopUp p;
-    p.msg = "Saved file!";
-    p.msg_size = strlen(p.msg);
-    p.color = hex_to_vec4f(0x009966FF);
-    p.when = SDL_GetTicks();
-    p.lasts = 1000;
-    (void) editor_add_popup(e, &p);
+    editor_configured_popup(e, "save ok", (PlaceholderList) {
+        .elems = (Placeholder[]) {
+            PLACEHOLDER_STR("path", file_path),
+        },
+        .elems_size = 1
+    });
 
     return 0;
 }
@@ -106,13 +102,12 @@ Errno editor_save(Editor *e)
     printf("Saving as %s...\n", e->file_path.items);
     Errno err = write_entire_file(e->file_path.items, e->data.items, e->data.count);
     if (err == 0) {
-        PopUp p;
-        p.msg = "Saved file!";
-        p.msg_size = strlen(p.msg);
-        p.color = hex_to_vec4f(0x009966FF);
-        p.when = SDL_GetTicks();
-        p.lasts = 1000;
-        (void) editor_add_popup(e, &p);
+        editor_configured_popup(e, "save ok", (PlaceholderList) {
+            .elems = (Placeholder[]) {
+                PLACEHOLDER_STR("path", e->file_path.items),
+            },
+            .elems_size = 1
+        });
     }
     return err;
 }
@@ -438,11 +433,11 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_flush(sr);
     }
 
-    float scale = 0.6f;
-    float oscale = 1.0f / scale;
-
     // Render pop-ups
     {
+        float scale = (float) editor->configs.popup.scale;
+        float oscale = 1.0f / scale;
+
         Simple_Camera oldCam = sr->cam;
         sr->cam = (Simple_Camera) {
             .pos = vec2f((float) w / 2 * oscale - 20.0f * scale, -((float) h / 2 * oscale) + 80.0f * scale),
@@ -466,7 +461,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         for (size_t i = 0; i < editor->popUps.count; i ++) {
             PopUp *p = &editor->popUps.items[i];
 
-            float t = (SDL_GetTicks() - p->when) / 300.0f;
+            float t = (SDL_GetTicks() - p->when) / (float) editor->configs.popup.fade_in;
             if (t > 1)
                 t = 1;
             else if (t < 0)
@@ -485,6 +480,9 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
     // Render bottom bar
     {
+        float scale = 0.6f;
+        float oscale = 1.0f / scale;
+
         Simple_Camera oldCam = sr->cam;
         sr->cam = (Simple_Camera) {
             .pos = vec2f((float) w / 2 * oscale, ((float) h / 2 * oscale) - 60.0f * scale),
@@ -636,7 +634,7 @@ void editor_start_search(Editor *e)
     } else {
         e->searching = true;
         editor_start_input(e);
-        e->input.hint = "find: ";
+        e->input.hint = editor_configured_inline_hint(e, "find");
         e->input.hint_len = strlen(e->input.hint);
         if (e->selection) {
             size_t begin = e->select_begin;
@@ -737,6 +735,9 @@ void editor_remove_popup(Editor *editor, Uint32 uid)
         if (p->uid != uid)
             continue;
 
+        if (p->free_msg)
+            free((char *) p->msg);
+
         memcpy(p, p + 1, (editor->popUps.count - i - 1) * sizeof(PopUp));
         editor->popUps.count --;
         editor->popUps.items = realloc(editor->popUps.items, sizeof(PopUp) * editor->popUps.count);
@@ -751,6 +752,7 @@ void flash_error_str(Editor *editor, const char *str)
 
     PopUp p;
     p.msg = str;
+    p.free_msg = false;
     p.msg_size = strlen(str);
     p.color = hex_to_vec4f(0xff2400ff);
     p.when = SDL_GetTicks();
@@ -771,6 +773,80 @@ void editor_start_input(Editor *editor)
     }
 }
 
+void editor_configured_popup(Editor *editor, const char *type, PlaceholderList placeholders) {
+    Config cfg;
+    config_init(&cfg);
+    bool ok;
+    config_child(&cfg, editor->configs.popup_messages, type, &ok);
+    if (!ok) {
+        fprintf(stderr, "\"pop ups/%s\" not configured!\n", type);
+        goto err;
+    }
+
+    PopUp popup;
+
+    const char *fmt_str = config_get_str_at(cfg, "str", &ok);
+    if (!ok) {
+        fprintf(stderr, "\"pop ups/%s/str\" not configured!\n", type);
+        goto err;
+    }
+
+    popup.color = hex_to_vec4f(config_get_long_at(cfg, "color", &ok));
+    if (!ok) {
+        fprintf(stderr, "\"pop ups/%s/color\" not configured!\n", type);
+        goto err;
+    }
+
+    popup.lasts = config_get_long_at(cfg, "last", &ok);
+    if (!ok) {
+        fprintf(stderr, "\"pop ups/%s/last\" not configured!\n", type);
+        goto err;
+    }
+
+    {
+        size_t fmt_str_len = strlen(fmt_str);
+        char *fmt_str_copy = malloc(fmt_str_len + 1);
+        memcpy(fmt_str_copy, fmt_str, fmt_str_len + 1);
+
+        Fmt fmt = fmt_compile(fmt_str_copy);
+        popup.msg = fmt_fmt_fmt(fmt, placeholders);
+        fmt_destroy(fmt);
+
+        free(fmt_str_copy);
+
+        if (popup.msg == NULL) {
+            fprintf(stderr, "\"pop ups/%s/str\" format error!\n", type);
+            goto err;
+        }
+
+        popup.msg_size = strlen(popup.msg);
+
+        popup.free_msg = true;
+    }
+
+    popup.when = SDL_GetTicks();
+    (void) editor_add_popup(editor, &popup);
+
+    config_destroy(&cfg);
+    return;
+
+err:
+    flash_error(editor, "Config error! See program output for more info");
+    config_destroy(&cfg);
+    return;
+}
+
+const char *editor_configured_inline_hint(Editor *editor, const char *type) {
+    bool ok;
+    const char *str = config_get_str_at(editor->configs.input_hints, type, &ok);
+    if (!ok) {
+        fprintf(stderr, "\"input hints/%s\" not configured!\n", type);
+        flash_error(editor, "Config error! See program output for more info");
+        return "???";
+    }
+    return str;
+}
+
 bool editor_load_config(Editor *editor, const char *config_path) {
     config_destroy(&editor->configs.cfg);
     config_init(&editor->configs.cfg);
@@ -781,6 +857,112 @@ bool editor_load_config(Editor *editor, const char *config_path) {
         return false;
     editor->configs.alloc = config_add_file(&editor->configs.cfg, file);
     fclose(file);
+
+    {
+        Config window;
+        config_init(&window);
+        bool ok;
+        config_child(&window, editor->configs.cfg, "window", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.font = config_get_str_at(window, "font", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/font\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.title = config_get_str_at(window, "title", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/title\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.x = config_get_long_at(window, "x", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/x\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.y = config_get_long_at(window, "y", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/y\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.w = config_get_long_at(window, "w", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/w\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        editor->configs.window.h = config_get_long_at(window, "h", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"window/h\" not found in config!");
+            config_destroy(&window);
+            return false;
+        }
+
+        config_destroy(&window);
+    }
+
+    {
+        Config popup;
+        config_init(&popup);
+        bool ok;
+        config_child(&popup, editor->configs.cfg, "pop up", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"pop up\" not found in config!");
+            config_destroy(&popup);
+            return false;
+        }
+
+        editor->configs.popup.scale = config_get_double_at(popup, "scale", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"pop up/scale\" not found in config!");
+            config_destroy(&popup);
+            return false;
+        }
+
+        editor->configs.popup.fade_in = config_get_long_at(popup, "fade in", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"pop up/fade in\" not found in config!");
+            config_destroy(&popup);
+            return false;
+        }
+
+        config_destroy(&popup);
+    }
+
+    {
+        config_destroy(&editor->configs.popup_messages);
+        config_init(&editor->configs.popup_messages);
+        bool ok;
+        config_child(&editor->configs.popup_messages, editor->configs.cfg, "pop ups", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"pop ups\" not found in config!");
+            return false;
+        }
+    }
+
+    {
+        config_destroy(&editor->configs.input_hints);
+        config_init(&editor->configs.input_hints);
+        bool ok;
+        config_child(&editor->configs.input_hints, editor->configs.cfg, "input hints", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"input hints\" not found in config!");
+            return false;
+        }
+    }
 
     return true;
 }

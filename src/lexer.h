@@ -28,6 +28,8 @@ typedef enum {
     TOKEN_STRING,
 } Token_Kind;
 
+#define TOKEN_KIND_SIZE TOKEN_STRING - TOKEN_END
+
 const char *token_kind_name(Token_Kind kind);
 
 typedef struct {
