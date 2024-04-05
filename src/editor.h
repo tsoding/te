@@ -79,6 +79,7 @@ typedef struct {
 
 	struct {
 		Vec4f background;
+        Vec4f color;
 
 		struct {
 			double scale;

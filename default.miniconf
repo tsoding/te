@@ -40,6 +40,7 @@ input hints:
 
 editor:
     background: x181818FF
+    color:      xFFFFFFFF
     bottom bar:
         scale: 0.6
         background: xE7E7E7FF
@@ -55,7 +56,7 @@ editor:
             fmt: "{lang} {row}:{col} / {max-row}
             color: x181818FF
     tokens:
-        preproc: x95A99FFF
+        preprocessor directive: x95A99FFF
         keyword: xFFDD33FF
         comment: xCC8C3CFF
         string:  x73C936FF

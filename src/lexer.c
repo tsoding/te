@@ -65,34 +65,20 @@ const char *pyKeywords[] = {
 };
 #define pyKeywords_count (sizeof(pyKeywords)/sizeof(pyKeywords[0]))
 
-const char *token_kind_name(Token_Kind kind)
-{
-    switch (kind) {
-    case TOKEN_END:
-        return "end of content";
-    case TOKEN_INVALID:
-        return "invalid token";
-    case TOKEN_PREPROC:
-        return "preprocessor directive";
-    case TOKEN_SYMBOL:
-        return "symbol";
-    case TOKEN_OPEN_PAREN:
-        return "open paren";
-    case TOKEN_CLOSE_PAREN:
-        return "close paren";
-    case TOKEN_OPEN_CURLY:
-        return "open curly";
-    case TOKEN_CLOSE_CURLY:
-        return "close curly";
-    case TOKEN_SEMICOLON:
-        return "semicolon";
-    case TOKEN_KEYWORD:
-        return "keyword";
-    default:
-        UNREACHABLE("token_kind_name");
-    }
-    return NULL;
-}
+const char *token_kind_name[TOKEN_KIND_SIZE] = {
+    [TOKEN_END] = "end of content",
+    [TOKEN_INVALID] = "invalid token",
+    [TOKEN_PREPROC] = "preprocessor directive",
+    [TOKEN_SYMBOL] = "symbol",
+    [TOKEN_OPEN_PAREN] = "open paren",
+    [TOKEN_CLOSE_PAREN] = "close paren",
+    [TOKEN_OPEN_CURLY] = "open curly",
+    [TOKEN_CLOSE_CURLY] = "close curly",
+    [TOKEN_SEMICOLON] = "semicolon",
+    [TOKEN_KEYWORD] = "keyword",
+    [TOKEN_COMMENT] = "comment",
+    [TOKEN_STRING] = "string",
+};
 
 Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len, String_Builder file_path)
 {

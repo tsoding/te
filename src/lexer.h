@@ -28,9 +28,9 @@ typedef enum {
     TOKEN_STRING,
 } Token_Kind;
 
-#define TOKEN_KIND_SIZE TOKEN_STRING - TOKEN_END
+#define TOKEN_KIND_SIZE TOKEN_STRING + 1
 
-const char *token_kind_name(Token_Kind kind);
+extern const char *token_kind_name[TOKEN_KIND_SIZE];
 
 typedef struct {
     Token_Kind kind;

@@ -307,6 +307,10 @@ const char *editor_line_starts_with_one_of(Editor *e, size_t row, size_t col, co
     return NULL;
 }
 
+static Vec4f token_color(Editor *editor, Token_Kind token) {
+    return editor->configs.editor.tokens[token];
+}
+
 void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor)
 {
     int w, h;
@@ -390,23 +394,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         for (size_t i = 0; i < editor->tokens.count; ++i) {
             Token token = editor->tokens.items[i];
             Vec2f pos = token.position;
-            Vec4f color = vec4fs(1);
-            switch (token.kind) {
-            case TOKEN_PREPROC:
-                color = hex_to_vec4f(0x95A99FFF);
-                break;
-            case TOKEN_KEYWORD:
-                color = hex_to_vec4f(0xFFDD33FF);
-                break;
-            case TOKEN_COMMENT:
-                color = hex_to_vec4f(0xCC8C3CFF);
-                break;
-            case TOKEN_STRING:
-                color = hex_to_vec4f(0x73c936ff);
-                break;
-            default:
-            {}
-            }
+            Vec4f color = token_color(editor, token.kind);
             free_glyph_atlas_render_line_sized(atlas, sr, token.text, token.text_len, &pos, color);
             // TODO: the max_line_len should be calculated based on what's visible on the screen right now
             if (max_line_len < pos.x) max_line_len = pos.x;
@@ -937,21 +925,21 @@ bool editor_load_config(Editor *editor, const char *config_path) {
         bool ok;
         config_child(&popup, editor->configs.cfg, "pop up", &ok);
         if (!ok) {
-            fprintf(stderr, "\"pop up\" not found in config!");
+            fprintf(stderr, "\"pop up\" not found in config!\n");
             config_destroy(&popup);
             return false;
         }
 
         editor->configs.popup.scale = config_get_double_at(popup, "scale", &ok);
         if (!ok) {
-            fprintf(stderr, "\"pop up/scale\" not found in config!");
+            fprintf(stderr, "\"pop up/scale\" not found in config!\n");
             config_destroy(&popup);
             return false;
         }
 
         editor->configs.popup.fade_in = config_get_long_at(popup, "fade in", &ok);
         if (!ok) {
-            fprintf(stderr, "\"pop up/fade in\" not found in config!");
+            fprintf(stderr, "\"pop up/fade in\" not found in config!\n");
             config_destroy(&popup);
             return false;
         }
@@ -965,7 +953,7 @@ bool editor_load_config(Editor *editor, const char *config_path) {
         bool ok;
         config_child(&editor->configs.popup_messages, editor->configs.cfg, "pop ups", &ok);
         if (!ok) {
-            fprintf(stderr, "\"pop ups\" not found in config!");
+            fprintf(stderr, "\"pop ups\" not found in config!\n");
             return false;
         }
     }
@@ -976,7 +964,7 @@ bool editor_load_config(Editor *editor, const char *config_path) {
         bool ok;
         config_child(&editor->configs.input_hints, editor->configs.cfg, "input hints", &ok);
         if (!ok) {
-            fprintf(stderr, "\"input hints\" not found in config!");
+            fprintf(stderr, "\"input hints\" not found in config!\n");
             return false;
         }
     }
@@ -986,19 +974,22 @@ bool editor_load_config(Editor *editor, const char *config_path) {
     bool ok;
     config_child(&edit, editor->configs.cfg, "editor", &ok);
     if (!ok) {
-        fprintf(stderr, "\"editor\" not found in config!");
+        fprintf(stderr, "\"editor\" not found in config!\n");
         config_destroy(&edit);
         return false;
     }
 
 #define CHECK_NF(what) if (!ok) { \
-    fprintf(stderr, "\"editor/" what "\" not found in config!"); \
+    fprintf(stderr, "\"editor/" what "\" not found in config!\n"); \
     config_destroy(&edit); \
     return false; \
 }
 
     editor->configs.editor.background = hex_to_vec4f(config_get_long_at(edit, "background", &ok));
     CHECK_NF("background")
+
+    editor->configs.editor.color = hex_to_vec4f(config_get_long_at(edit, "color", &ok));
+    CHECK_NF("color")
 
     // TODO
     // we should get each sub config manually but I'm lazy
@@ -1055,6 +1046,33 @@ bool editor_load_config(Editor *editor, const char *config_path) {
 
         editor->configs.editor.bottom.stats.color = hex_to_vec4f(config_get_long_at(edit, "bottom bar/stats/color", &ok));
         CHECK_NF("bottom bar/stats/color")
+    }
+
+    {
+        Config tokens;
+        config_init(&tokens);
+        bool ok;
+        config_child(&tokens, edit, "tokens", &ok);
+        if (!ok) {
+            fprintf(stderr, "\"editor/tokens\" not found in config!");
+            config_destroy(&tokens);
+            return false;
+        }
+
+        for (size_t i = 0; i < TOKEN_KIND_SIZE; i ++) {
+            const char *name = token_kind_name[i];
+
+            long colorLong = config_get_long_at(tokens, name, &ok);
+            Vec4f color;
+            if (ok)
+                color = hex_to_vec4f(colorLong);
+            else
+                color = editor->configs.editor.color;
+
+            editor->configs.editor.tokens[i] = color;
+        }
+
+        config_destroy(&tokens);
     }
 
 #undef CHECK_NF
