@@ -20,6 +20,9 @@
 #include "sv.h"
 #define FILELIB_IMPL
 #include <filelib.h>
+#define MINICONF_IMPL
+#include <miniconf.h>
+#include <memlib.h>
 
 static Arena temporary_arena = {0};
 
@@ -87,29 +90,11 @@ defer:
     return result;
 }
 
-static Errno file_size(FILE *file, size_t *size)
-{
-    long saved = ftell(file);
-    if (saved < 0) return errno;
-    if (fseek(file, 0, SEEK_END) < 0) return errno;
-    long result = ftell(file);
-    if (result < 0) return errno;
-    if (fseek(file, saved, SEEK_SET) < 0) return errno;
-    *size = (size_t) result;
-    return 0;
-}
-
 Errno read_entire_file(const char *file_path, String_Builder *sb)
 {
-    FILE *f = fopen(file_path, "r");
-    // TODO: bruh
-    if (f == NULL) {
-        f = fopen(file_path, "w");
-        if (f == NULL) return 1;
-        fclose(f);
-        f = fopen(file_path, "r");
-        if (f == NULL) return 1;
-    }
+    FILE *f = fopen(file_path, "r+");
+    if (f == NULL)
+         return 1;
 
     int c;
     while ((c = fgetc(f)) != EOF && c != '\0') {

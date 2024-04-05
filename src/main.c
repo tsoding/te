@@ -90,6 +90,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    const char *const conf_file_path = "ded.miniconf";
+    if (!editor_load_config(&editor, conf_file_path)) {
+        fprintf(stderr, "ERROR: Could not read config file \"%s\"\n", conf_file_path);
+        return 1;
+    }
+
     // TODO: users should be able to customize the font
     // const char *const font_file_path = "./fonts/VictorMono-Regular.ttf";
     const char *const font_file_path = "./fonts/iosevka-regular.ttf";

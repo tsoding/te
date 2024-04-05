@@ -770,3 +770,17 @@ void editor_start_input(Editor *editor)
         editor->input.text = (String_Builder){0};
     }
 }
+
+bool editor_load_config(Editor *editor, const char *config_path) {
+    config_destroy(&editor->configs.cfg);
+    config_init(&editor->configs.cfg);
+    allocgroup_free(editor->configs.alloc);
+
+    FILE *file = fopen(config_path, "r");
+    if (file == NULL)
+        return false;
+    editor->configs.alloc = config_add_file(&editor->configs.cfg, file);
+    fclose(file);
+
+    return true;
+}

@@ -1,6 +1,7 @@
 #ifndef EDITOR_H_
 #define EDITOR_H_
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include "common.h"
 #include "free_glyph.h"
@@ -8,6 +9,7 @@
 #include "lexer.h"
 
 #include <SDL2/SDL.h>
+#include <miniconf.h>
 
 typedef struct {
     size_t begin;
@@ -71,7 +73,14 @@ typedef struct Editor_s {
     Uint32 last_stroke;
 
     String_Builder clipboard;
+
+    struct {
+        Config     cfg;
+        AllocGroup alloc;
+    } configs;
 } Editor;
+
+bool editor_load_config(Editor *editor, const char *config_path);
 
 Errno editor_save_as(Editor *editor, const char *file_path);
 Errno editor_save(Editor *editor);

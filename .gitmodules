@@ -7,3 +7,6 @@
 [submodule "dependencies/miniconf"]
 	path = dependencies/miniconf
 	url = https://github.com/alex-s168/miniconf.git
+[submodule "dependencies/minifmt"]
+	path = dependencies/minifmt
+	url = https://github.com/alex-s168/minifmt.git
