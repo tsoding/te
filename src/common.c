@@ -18,6 +18,8 @@
 #include "./arena.h"
 #define SV_IMPLEMENTATION
 #include "sv.h"
+#define FILELIB_IMPL
+#include <filelib.h>
 
 static Arena temporary_arena = {0};
 
@@ -72,6 +74,8 @@ Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
     // TODO: why are there extra nulls at the end of the buf (buf_size)??
     // that's why we strlen it here to get the size without these nulls
     size_t real_buf_size = strlen(buf);
+    if (buf_size < real_buf_size)
+        real_buf_size = buf_size;
     fwrite(buf, 1, real_buf_size, f);
     if (get_last(buf, real_buf_size) != '\n') {
         fputc('\n', f);
@@ -97,21 +101,15 @@ static Errno file_size(FILE *file, size_t *size)
 
 Errno read_entire_file(const char *file_path, String_Builder *sb)
 {
-    Errno result = 0;
-    FILE *f = NULL;
-
-    f = fopen(file_path, "rb");
+    FILE *f = fopen(file_path, "r");
+    // TODO: bruh
     if (f == NULL) {
-        f = fopen(file_path, "wb");
-        if (f == NULL) return_defer(errno);
+        f = fopen(file_path, "w");
+        if (f == NULL) return 1;
         fclose(f);
-        f = fopen(file_path, "rb");
-        if (f == NULL) return_defer(errno);
+        f = fopen(file_path, "r");
+        if (f == NULL) return 1;
     }
-
-    size_t size;
-    Errno err = file_size(f, &size);
-    if (err != 0) return_defer(err);
 
     int c;
     while ((c = fgetc(f)) != EOF && c != '\0') {
@@ -127,12 +125,8 @@ Errno read_entire_file(const char *file_path, String_Builder *sb)
         }
     }
 
-    if (ferror(f)) return_defer(errno);
-    sb->count = size;
-
-defer:
-    if (f) fclose(f);
-    return result;
+    fclose(f);
+    return 0;
 }
 
 Vec4f hex_to_vec4f(uint32_t color)

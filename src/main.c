@@ -22,12 +22,7 @@
 #include "./lexer.h"
 #include "./sv.h"
 
-// TODO: Save file dialog
-// Needed when ded is ran without any file so it does not know where to save.
-
 // TODO: An ability to create a new file
-// TODO: Delete a word
-// TODO: Delete selection
 // TODO: Undo/redo system
 
 void MessageCallback(GLenum source,
