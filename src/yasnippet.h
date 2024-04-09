@@ -3,7 +3,6 @@
 
 #include "editor.h"
 
-// YASNIPPET
 #define MAX_SNIPPET_KEY_LENGTH 50
 #define MAX_SNIPPET_CONTENT_LENGTH 1024
 
@@ -25,7 +24,5 @@ void insert_snippet(SnippetArray *a, Snippet snippet);
 void free_snippet_array(SnippetArray *a);
 void load_snippets_from_directory();
 void activate_snippet(Editor *e);
-
-
 
 #endif // YASNIPPET_H_

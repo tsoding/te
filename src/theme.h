@@ -61,6 +61,13 @@ typedef struct {
     Vec4f null;
     Vec4f code_block;
     Vec4f fringe;
+    Vec4f nest1;
+    Vec4f nest2;
+    Vec4f nest3;
+    Vec4f nest4;
+    Vec4f nest5;
+    Vec4f nest6;
+    Vec4f fill_column;
 } Theme;
 
 #define CURRENT_THEME (currentTheme) // interpolated theme

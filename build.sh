@@ -24,7 +24,7 @@ set -xe
 
 CC="${CXX:-cc}"
 PKGS="sdl2 glew freetype2"
-CFLAGS="-Wall -Wextra -std=c11 -pedantic -ggdb -ljson-c -lpthread -D_DEFAULT_SOURCE -ltree-sitter"
+CFLAGS="-Wall -Wextra -std=c11 -pedantic -ggdb -ljson-c -lpthread -D_DEFAULT_SOURCE"
 LIBS=-lm
 SRC="src/*.c"
 
@@ -32,6 +32,6 @@ if [ `uname` = "Darwin" ]; then
     CFLAGS+=" -framework OpenGL"
 fi
 
-$CC $CFLAGS `pkg-config --cflags $PKGS` -o ded $SRC $LIBS ./libtree-sitter-json.a `pkg-config --libs $PKGS `
+$CC $CFLAGS `pkg-config --cflags $PKGS` -o ded $SRC $LIBS `pkg-config --libs $PKGS `
 
 

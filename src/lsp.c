@@ -12,12 +12,10 @@
 #include <limits.h>
 #include "common.h"
 
-// Global variables
 int to_clangd[2];
 int from_clangd[2];
 pthread_t receive_thread;
 int current_request_id = 1;
-
 
 void handle_error(const char *message) {
     perror(message);
@@ -57,14 +55,6 @@ void start_clangd(Editor *e) {
     }
     send_initialize_request(e);
 }
-
-/* void shutdown_clangd() { */
-/*     send_json_rpc("shutdown", "{}", current_request_id++); */
-/*     send_json_rpc("exit", "{}", current_request_id++); */
-/*     close(to_clangd[1]); */
-/*     pthread_join(receive_thread, NULL); */
-/*     wait(NULL); // Wait for clangd to terminate */
-/* } */
 
 void shutdown_clangd(Editor *e) {
     send_json_rpc(e->to_clangd_fd, "shutdown", "{}", current_request_id++);
@@ -149,7 +139,6 @@ void handle_lsp_response(LSPResponse *response, Editor *e) {
     }
 }
 
-
 void* receive_json_rpc(void* arg) {
     Editor *e = (Editor *)arg;
     if (e == NULL) {
@@ -192,9 +181,6 @@ void* receive_json_rpc(void* arg) {
     printf("[receive_json_rpc] Thread is exiting.\n");
     return NULL;
 }
-
-
-
 
 
 void convert_uri_to_file_path(const char *uri, char *file_path, size_t file_path_size) {
@@ -278,18 +264,22 @@ void get_current_file_uri(Editor *e, File_Browser *fb, char *file_uri, size_t ur
     }
 }
 
-
-
 void send_initialize_request(Editor *e) {
     const char *params = "{"
                          "\"processId\": null,"
-                         "\"rootUri\": \"file://<path_to_your_workspace>\","
+                         "\"rootUri\": \"file:///home/l/Desktop/test/ded\","
                          "\"capabilities\": {"
-                         "  // Include necessary capabilities"
+                         "  \"textDocument\": {"
+                         "    \"definition\": {"
+                         "      \"dynamicRegistration\": true"
+                         "    }"
+                         "  }"
                          "}"
                          "}";
     send_json_rpc(e->to_clangd_fd, "initialize", params, current_request_id++);
 }
+
+
 
 void send_initialized_notification(Editor *e) {
     send_json_rpc(e->to_clangd_fd, "initialized", "{}", current_request_id++);

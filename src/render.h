@@ -25,6 +25,8 @@ void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *e
 #include "file_browser.h"
 void render_markdown(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor, File_Browser *fb);
 
+void render_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor);
+
 
 
 typedef struct {

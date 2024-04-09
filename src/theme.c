@@ -160,6 +160,8 @@ void update_theme_interpolation() {
     currentTheme.indentation_line = color_lerp(startTheme.indentation_line, endTheme.indentation_line, interpolationProgress);
     currentTheme.null = color_lerp(startTheme.null, endTheme.null, interpolationProgress);
     currentTheme.code_block = color_lerp(startTheme.code_block, endTheme.code_block, interpolationProgress);
+    currentTheme.fringe = color_lerp(startTheme.fringe, endTheme.fringe, interpolationProgress);
+    currentTheme.fill_column = color_lerp(startTheme.fill_column, endTheme.fill_column, interpolationProgress);
 
     if (interpolationProgress >= 1.0f) {
       interpolationProgress = 1.0f;
@@ -170,6 +172,8 @@ void update_theme_interpolation() {
   }
 }
 
+
+// TODO each theme should have a name not only an index
 void initialize_themes() {
   // Nature
   themes[0] = (Theme){
@@ -206,9 +210,9 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x4C6750FF),
       .falsee = hex_to_vec4f(0x867892FF),
       .arrow = hex_to_vec4f(0x834EB6FF),
-      .open_square = hex_to_vec4f(0xC0ACD1FF),
-      .close_square = hex_to_vec4f(0xC0ACD1FF),
-      .array_content = hex_to_vec4f(0x4C6750FF),
+      .open_square = hex_to_vec4f(0x514B8EFF),
+      .close_square = hex_to_vec4f(0x514B8EFF),
+      .array_content = hex_to_vec4f(0xC0ACD1FF),
       .link = hex_to_vec4f(0x565663FF),
       .logic_or = hex_to_vec4f(0x658B5FFF),
       .pipe = hex_to_vec4f(0x565663FF),
@@ -229,11 +233,14 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x171717FF),
       .null = hex_to_vec4f(0x564F96FF),
       .code_block = hex_to_vec4f(0x080808FF),
+      .nest1 = hex_to_vec4f(0x658B5FFF),
+      .nest2 = hex_to_vec4f(0x514B8EFF),
+      .nest3 = hex_to_vec4f(0x658B5FFF),
+      .nest4 = hex_to_vec4f(0x514B8EFF),
+      .nest5 = hex_to_vec4f(0x658B5FFF),
+      .nest6 = hex_to_vec4f(0x514B8EFF),
+      .fill_column = hex_to_vec4f(0x262626FF),
   };
-
-
-
-
   
   // DOOM one
   themes[1] = (Theme){
@@ -293,6 +300,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x3F444AFF),
       .null = hex_to_vec4f(0xA9A1E1FF),
       .code_block = hex_to_vec4f(0x23272EFF),
+      .fill_column = hex_to_vec4f(0x42444AFF),
   };
 
   // Dracula
@@ -353,6 +361,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x565761FF),
       .null = hex_to_vec4f(0x8BE9FDFF),
       .code_block = hex_to_vec4f(0x23242FFF),
+      .fill_column = hex_to_vec4f(0x44475AFF),
   };
 
   // Palenigh
@@ -413,6 +422,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x4E5579FF),
       .null = hex_to_vec4f(0xF78C6CFF),
       .code_block = hex_to_vec4f(0x232635FF),
+      .fill_column = hex_to_vec4f(0x3C435EFF),
   };
 
   // DOOM city lights
@@ -473,6 +483,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x384551FF),
       .null = hex_to_vec4f(0xE27E8DFF),
       .code_block = hex_to_vec4f(0x20282FFF),
+      .fill_column = hex_to_vec4f(0x28323BFF),
   };
 
   // DOOM molokai
@@ -533,6 +544,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x4E4E4EFF),
       .null = hex_to_vec4f(0xFD971FFF),
       .code_block = hex_to_vec4f(0x2D2E2EFF),
+      .fill_column = hex_to_vec4f(0x4E4E4EFF),
   };
 
   // SUNSET
@@ -593,6 +605,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x28292DFF),
       .null = hex_to_vec4f(0xD46A7DFF),
       .code_block = hex_to_vec4f(0x0B0C11FF),
+      .fill_column = hex_to_vec4f(0x28292DFF),
   };
 
   // Helix
@@ -652,6 +665,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x281733FF),
       .null = hex_to_vec4f(0xFFFFFFFF),
       .code_block = hex_to_vec4f(0x281733FF),
+      .fill_column = hex_to_vec4f(0x540099FF), // #540099
   };
 
    themes[8] = (Theme){
@@ -711,6 +725,7 @@ void initialize_themes() {
       .indentation_line = hex_to_vec4f(0x272C3AFF),
       .null = hex_to_vec4f(0x41B0F3FF),
       .code_block = hex_to_vec4f(0x191D26FF),
+      .fill_column = hex_to_vec4f(0x272C3AFF), //#272C3A
   };
 
 

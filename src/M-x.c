@@ -5,6 +5,7 @@
 #include "helix.h"
 #include "emacs.h"
 #include "lsp.h"
+#include "utilities.h"
 
 // TODO aliases (lua or lisp we will have an init file), 
 // history in program memory, when quitting save it in ~/.config/ded/M-x-history
@@ -104,20 +105,6 @@ uint64_t simple_string_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         hash = 31 * hash + (*str++);
     }
     return hash ^ seed1;
-}
-
-
-// UTLITY
-bool is_number(const char *str) {
-    if (!str || *str == '\0')
-        return false;  // Empty string is not a number
-
-    // Check if each character is a digit
-    for (const char *p = str; *p != '\0'; p++) {
-        if (!isdigit((unsigned char)*p))
-            return false;
-    }
-    return true;
 }
 
 

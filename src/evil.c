@@ -1,6 +1,7 @@
+#include <stdbool.h>
 #include "evil.h"
 #include "editor.h"
-#include <stdbool.h>
+#include "utilities.h"
 
 void evil_open_below(Editor *editor) {
     size_t row = editor_cursor_row(editor);

@@ -12,6 +12,10 @@
 
 #include "hashmap.h"
 
+
+extern bool copiedLine;
+extern bool matchParenthesis;
+
 extern bool followCursor;
 extern size_t indentation;
 extern float zoom_factor;
@@ -20,20 +24,18 @@ extern float max_zoom_factor;
 extern bool showLineNumbers;
 extern bool isWave;
 extern bool showWhitespaces;
-extern bool copiedLine;
 extern bool hl_line;
 extern bool relativeLineNumbers;
 extern bool highlightCurrentLineNumber;
-extern bool matchParenthesis;
-extern bool superDrammtic;
 extern bool showIndentationLines;
-
+extern bool zoomInInsertMode;
+extern bool centeredText;
 extern bool showMinibuffer;
 extern bool showModeline;
 extern float minibufferHeight;
 extern float modelineHeight;
 extern float modelineAccentWidth;
-extern bool ivy;
+extern bool fzy;
 extern bool M_x_active;
 extern bool evil_command_active;
 extern bool quit;
@@ -46,6 +48,11 @@ extern bool instantCamera;
 extern bool helix;
 extern bool emacs;
 extern bool automatic_zoom;
+
+extern size_t fillColumn;
+extern float fillColumnThickness;
+extern bool smartFillColumn;
+extern bool showFillColumn;
 
 // Emacs Style KeyChords
 extern bool ctrl_x_pressed;
@@ -221,46 +228,6 @@ void update_cursor_color(Editor * editor);
 /* void update_cursor_color(Editor *editor, Free_Glyph_Atlas *atlas); */
 
 
-
-
-
-
-
-
-
-
-
-
-
-// UTILITY
-bool extractLine(Editor *editor, size_t cursor, char *line, size_t max_length);
-size_t editor_row_from_pos(const Editor *e, size_t pos);
-bool extract_word_under_cursor(Editor *editor, char *word);
-bool editor_is_line_empty(Editor *e, size_t row);
-bool editor_is_line_whitespaced(Editor *e, size_t row);
-float measure_whitespace_width(Free_Glyph_Atlas *atlas);
-float measure_whitespace_height(Free_Glyph_Atlas *atlas);
-size_t find_first_non_whitespace(const char* items, size_t begin, size_t end);
-bool extract_word_left_of_cursor(Editor *e, char *word, size_t max_word_length);
-bool is_number(const char *str);
-
-// Var Documentation
-
-typedef struct {
-    char *var_name;  // Name of the variable
-    char *var_type;  // Type of the variable (e.g., "int", "float", "bool")
-    char *description; // Description of the variable
-} VariableDoc;
-
-void initialize_variable_docs_map(uint64_t seed0, uint64_t seed1);
-bool document_variable(const char *name, const char *type, const char *description);
-void initialize_variable_documentation();
-void print_variable_doc(const char *var_name);
-uint64_t variable_doc_hash(const void *item, uint64_t seed0, uint64_t seed1);
-int variable_doc_compare(const void *a, const void *b, void *udata);
-
-
-
 // animation
 extern float targetModelineHeight;
 extern bool isModelineAnimating;
@@ -274,7 +241,6 @@ extern float minibufferAnimationDuration;
 void update_minibuffer_animation(float deltaTime);
 
 float easeOutCubic(float x);
-
 
 
 

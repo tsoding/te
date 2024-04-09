@@ -2,6 +2,7 @@
 #include <time.h>
 #include "helix.h"
 #include "editor.h"
+#include "lexer.h"
 #include "theme.h"
 
 void helix_mode() {
@@ -32,7 +33,6 @@ void helix_mode() {
 void update_cursor_color(Editor *editor) {
     // Check for no text
     if (editor == NULL || editor->data.items == NULL || editor->data.count == 0) {
-        // Handle the error or return with a default color
         currentTheme.cursor = themes[currentThemeIndex].notext_cursor;
         return;
     }
@@ -99,6 +99,8 @@ Vec4f get_color_for_token_kind(Token_Kind kind) {
         case TOKEN_ARROW: return currentTheme.arrow;
         case TOKEN_FUNCTION_DEFINITION: return currentTheme.function_definition;
         case TOKEN_ARRAY_CONTENT: return currentTheme.array_content;
+        case TOKEN_OPEN_SQUARE: return currentTheme.open_square;
+        case TOKEN_CLOSE_SQUARE: return currentTheme.close_square;
         default: return currentTheme.cursor;
     }
 }

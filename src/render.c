@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include "clock.h"
+#include "utilities.h"
 
 float lineNumberWidth = FREE_GLYPH_FONT_SIZE * 1;
 bool render_whitespaces_on_select = false;
@@ -23,6 +24,36 @@ Vec4f blend_color(Vec4f color1, Vec4f color2, float blendFactor) {
     result.z = color1.z * (1 - blendFactor) + color2.z * blendFactor;
     result.w = color1.w * (1 - blendFactor) + color2.w * blendFactor;
     return result;
+}
+
+
+void render_fill_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
+    float len = calculate_max_line_length(editor);
+    if (smartFillColumn && len < fillColumn + 1 || showFillColumn == false) {
+        return;
+    }
+
+    float characterWidth = measure_whitespace_width(atlas);
+    float columnPosition = characterWidth * fillColumn;
+
+    if (showLineNumbers) {
+        columnPosition += lineNumberWidth;
+    }
+
+    Vec2f startPos = {columnPosition, sr->camera_pos.y - (sr->resolution.y / 2) / sr->camera_scale};
+    Vec2f endPos = {columnPosition, sr->camera_pos.y + (sr->resolution.y / 2) / sr->camera_scale};
+
+    float COLUMN_THICKNESS;
+    if (fillColumnThickness == 0) {
+        COLUMN_THICKNESS = characterWidth;
+    } else {
+        COLUMN_THICKNESS = fillColumnThickness;
+    }
+
+    Vec4f COLUMN_COLOR = CURRENT_THEME.fill_column;
+    simple_renderer_solid_rect(sr, startPos, vec2f(COLUMN_THICKNESS, endPos.y - startPos.y), COLUMN_COLOR);
+
+    simple_renderer_flush(sr);
 }
 
 // TODO
@@ -44,7 +75,7 @@ void render_search_text(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *ed
 
         // Set cursor size
         float cursor_width = measure_whitespace_width(atlas);
-        Vec2f cursorSize = {cursor_width, 21.0f * 4.0f}; // 21 is the minibufferHeight
+        Vec2f cursorSize = {cursor_width, minibufferHeight * 4.0f};
 
         // Render the cursor
         simple_renderer_flush(sr);
@@ -55,6 +86,58 @@ void render_search_text(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *ed
         simple_renderer_flush(sr);
     }
 }
+
+void render_minibuffer_content(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor, const char *prefixText) {
+    if (editor->minibuffer_active) {
+        Vec4f cursorColor = CURRENT_THEME.cursor;
+        Vec4f textColor = CURRENT_THEME.text;
+        Vec2f searchPos = {30.0f, 20.0f};
+        float prefixRightPadding;
+        float minibufferCursorOffsett = 5.0f;
+
+        if (M_x_active) {
+            prefixRightPadding = 50;
+        } else if (evil_command_active) {
+            prefixRightPadding = 0;
+        } else if (editor->searching) {
+            prefixRightPadding = 0;
+        }
+
+        if (editor->searching) {
+            // TODO
+        } else {
+            // Render the prefix
+            free_glyph_atlas_render_line_sized(atlas, sr, prefixText, strlen(prefixText), &searchPos, cursorColor);
+            
+            // Calculate the width of the prefix and adjust the position for minibuffer text
+            float prefixWidth = free_glyph_atlas_measure_line_width(atlas, prefixText, strlen(prefixText));
+            searchPos.x += prefixRightPadding;
+            
+            // Render the minibuffer text
+            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_TEXT);
+            free_glyph_atlas_render_line_sized(atlas, sr, editor->minibuffer_text.items, editor->minibuffer_text.count, &searchPos, textColor);
+            
+            // Adjust cursor position according to your original logic
+            searchPos.x += minibufferCursorOffsett; // Adjust x for the cursor
+            searchPos.y = 0.0f; // Reset y for the cursor
+            Vec2f cursorPos = searchPos;
+            
+            // Set cursor size
+            float cursor_width = measure_whitespace_width(atlas);
+            Vec2f cursorSize = {cursor_width, 21.0f * 4.0f}; // 21 is the minibufferHeight
+            
+            // Render the cursor
+            simple_renderer_flush(sr);
+            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_COLOR);
+            simple_renderer_solid_rect(sr, cursorPos, cursorSize, cursorColor);
+        }
+        // Flush the renderer
+        simple_renderer_flush(sr);
+    }
+}
+
+
+
 
 void render_selection(Editor *editor, Simple_Renderer *sr, Free_Glyph_Atlas *atlas) {
     if (isWave) {
@@ -68,8 +151,7 @@ void render_selection(Editor *editor, Simple_Renderer *sr, Free_Glyph_Atlas *atl
     if (editor->selection) {
         Vec4f selection_color;
         if (mixSelectionColor) {
-            // If mixSelectionColor is true, blend the cursor and selection colors
-            selection_color = blend_color(currentTheme.cursor, currentTheme.selection, 0.5); // Adjust blend factor as needed
+            selection_color = blend_color(currentTheme.cursor, currentTheme.selection, 0.5);
         } else {
             selection_color = themes[currentThemeIndex].selection;
         }
@@ -168,57 +250,6 @@ void render_markdown(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *edito
         }
     }
 }
-
-
-
-
-void render_minibuffer_content(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor, const char *prefixText) {
-    if (editor->minibuffer_active) {
-        Vec4f cursorColor = CURRENT_THEME.cursor;
-        Vec4f textColor = CURRENT_THEME.text;
-        Vec2f searchPos = {30.0f, 20.0f};
-        float prefixRightPadding;
-        float minibufferCursorOffsett = 5.0f;
-
-        if (M_x_active) {
-            prefixRightPadding = 50;
-        } else if (evil_command_active) {
-            prefixRightPadding = 0;
-        }
-
-        if (editor->searching) {
-
-        } else {
-            // Render the prefix
-            free_glyph_atlas_render_line_sized(atlas, sr, prefixText, strlen(prefixText), &searchPos, cursorColor);
-            
-            // Calculate the width of the prefix and adjust the position for minibuffer text
-            float prefixWidth = free_glyph_atlas_measure_line_width(atlas, prefixText, strlen(prefixText));
-            searchPos.x += prefixRightPadding;
-            
-            // Render the minibuffer text
-            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_TEXT);
-            free_glyph_atlas_render_line_sized(atlas, sr, editor->minibuffer_text.items, editor->minibuffer_text.count, &searchPos, textColor);
-            
-            // Adjust cursor position according to your original logic
-            searchPos.x += minibufferCursorOffsett; // Adjust x for the cursor
-            searchPos.y = 0.0f; // Reset y for the cursor
-            Vec2f cursorPos = searchPos;
-            
-            // Set cursor size
-            float cursor_width = measure_whitespace_width(atlas);
-            Vec2f cursorSize = {cursor_width, 21.0f * 4.0f}; // 21 is the minibufferHeight
-            
-            // Render the cursor
-            simple_renderer_flush(sr);
-            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_COLOR);
-            simple_renderer_solid_rect(sr, cursorPos, cursorSize, cursorColor);
-        }
-        // Flush the renderer
-        simple_renderer_flush(sr);
-    }
-}
-
 
 void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
     if (showLineNumbers) {
@@ -382,81 +413,67 @@ void render_whitespaces(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *ed
 }
 
 
+void render_indentation_lines(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
+    if (!showIndentationLines) return;
 
-typedef struct {
-    size_t pos;
-    size_t line;
-    int level;
-    float startX; // X position of the start of the line
-} BraceInfo;
+    if (isWave) {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_WAVE, SHADER_FOR_COLOR);
+    } else {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+    }
 
-// TODO exit early If a line does not contain any braces
-// TODO calculate properly CHARACTER_WIDTH
-void render_indentation_lines(Simple_Renderer *sr, Free_Glyph_Atlas *atlas,  Editor *editor) {
-    if (showIndentationLines) {
-        if (isWave) {
-            simple_renderer_set_shader(sr, VERTEX_SHADER_WAVE, SHADER_FOR_COLOR);
-        } else {
-            simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
-        }
-        
-        float LINE_THICKNESS = 5.0f;
-        BraceInfo braceStack[5000]; // Assuming a max of 5000 nested braces
-        int braceCount = 0;
-        float CHARACTER_WIDTH = measure_whitespace_width(atlas);
-        
-        for (size_t i = 0; i < editor->lines.count; ++i) {
-            Line line = editor->lines.items[i];
-            for (size_t j = line.begin; j < line.end; ++j) {
-                if (editor->data.items[j] == '{') {
-                    ssize_t matching_pos = find_matching_parenthesis(editor, j);
-                    if (matching_pos != -1) {
-                        size_t matching_line = editor_row_from_pos(editor, matching_pos);
-                        
-                        if (matching_line == i) {
-                            j = matching_pos; // Move past the closing brace on the same line
-                            continue;
-                        }
-                        
-                        // Calculate the position of the first non-whitespace character
-                        size_t first_non_whitespace = line.begin;
-                        while (first_non_whitespace < line.end &&
-                               (editor->data.items[first_non_whitespace] == ' ' || 
-                                editor->data.items[first_non_whitespace] == '\t')) {
-                            first_non_whitespace++;
-                        }
-                        
-                        // Calculate the X position where the line should start
-                        float lineStartX = (first_non_whitespace - line.begin) * CHARACTER_WIDTH;
-                        
-                        braceStack[braceCount] = (BraceInfo){j, i, braceCount, lineStartX};
-                        braceCount++;
-                    }
-                } else if (editor->data.items[j] == '}') {
-                    if (braceCount > 0 && braceStack[braceCount - 1].line < i) {
-                        braceCount--;
-                    }
-                }
-            }
-            
-            // Draw lines for each brace in the stack
-            for (int k = 0; k < braceCount; k++) {
-                if (braceStack[k].line < i) {
-                    Vec2f start_pos = {braceStack[k].startX, -((float)braceStack[k].line + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
-                    // Extend the line to include the line with the closing brace
-                    Vec2f end_pos = {start_pos.x, -((float)i + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
-                    
+    
+    float COLUMN_THICKNESS = 5.0f;
+    float CHARACTER_WIDTH = measure_whitespace_width(atlas);
+    // This structure keeps track of open braces and their line start positions.
+    struct LineSpan {
+        size_t startLine;
+        size_t endLine;
+        float startX;
+    } lineSpans[5000];
+    int spanCount = 0;
+
+    // Iterate through each line in the editor
+    for (size_t i = 0; i < editor->lines.count; ++i) {
+        Line line = editor->lines.items[i];
+
+        // Iterate through each character in the line
+        for (size_t j = line.begin; j < line.end; ++j) {
+            char c = editor->data.items[j];
+            if (c == '{') {
+                ssize_t matchingPos = find_matching_parenthesis(editor, j);
+                if (matchingPos != -1) {
+                    size_t matchingLine = editor_row_from_pos(editor, matchingPos);
+
+                    // Calculate the position of the first non-whitespace character
+                    size_t firstNonWhitespace = find_first_non_whitespace(editor->data.items, line.begin, j);
+
+                    // Calculate the X position where the line should start
+                    float lineStartX = (firstNonWhitespace - line.begin) * CHARACTER_WIDTH;
                     if (showLineNumbers) {
-                        start_pos.x += lineNumberWidth;
-                        end_pos.x += lineNumberWidth;
+                        lineStartX += lineNumberWidth;
                     }
-                    
-                    simple_renderer_solid_rect(sr, start_pos, vec2f(LINE_THICKNESS, end_pos.y - start_pos.y), CURRENT_THEME.indentation_line);
+
+                    // Add a new line span for the opening brace
+                    lineSpans[spanCount++] = (struct LineSpan){i, matchingLine, lineStartX};
                 }
             }
         }
     }
+
+    // Draw lines for each collected brace pair
+    for (int k = 0; k < spanCount; k++) {
+        Vec2f startPos = {lineSpans[k].startX, -((float)lineSpans[k].startLine + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
+        // Adjust endPos to make the line one line shorter, so it doesn't extend to the closing brace line
+        Vec2f endPos = {startPos.x, -((float)lineSpans[k].endLine - 1 + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
+
+        simple_renderer_solid_rect(sr, startPos, vec2f(COLUMN_THICKNESS, endPos.y - startPos.y), CURRENT_THEME.indentation_line);
+    }
 }
+
+
+
+
 
 void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor)
 {
@@ -618,7 +635,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         }
     }
 
-
+    render_fill_column(sr, atlas, editor);
 
     // Render cursor
     if (isWave) {
@@ -1072,11 +1089,16 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 color = CURRENT_THEME.bug;
                 break;
             case TOKEN_STRING:
-                /* color = hex_to_vec4f(0x73c936ff); */
                 color = CURRENT_THEME.string;
                 break;
-            case TOKEN_COLOR: // Added case for TOKEN_COLOR
-                {
+            case TOKEN_OPEN_CURLY:
+                color = CURRENT_THEME.string;
+                break;
+            case TOKEN_CLOSE_CURLY:
+                color = CURRENT_THEME.string;
+                break;
+
+            case TOKEN_COLOR: {
                     unsigned long long hex_value;
                     if(sscanf(token.text, "0x%llx", &hex_value) == 1) {
                         color = hex_to_vec4f((uint32_t)hex_value);
@@ -1153,7 +1175,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                     if (showLineNumbers) {
                         zoom_factor += 1.5f;
                     }                        
-                    if (superDrammtic) {
+                    if (zoomInInsertMode) {
                         if (current_mode == INSERT) {
                             zoom_factor -= 1;
                         }
@@ -1173,9 +1195,17 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             if (target_scale > 3.0f) {
                 target_scale = 3.0f;
             } else {
+
+                float division;
+                if (centeredText) {
+                    division = 3;
+                } else {
+                    division = 2.02;
+                }
+
                 offset = cursor_pos.x - w/3/sr->camera_scale;
                 if (offset < 0.0f) offset = 0.0f;
-                target = vec2f(w/3/sr->camera_scale + offset, cursor_pos.y);
+                target = vec2f(w/division/sr->camera_scale + offset, cursor_pos.y);
             }
 
             sr->camera_vel = vec2f_mul(
@@ -1196,13 +1226,20 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             
             Vec2f target = cursor_pos;
             float offset = 0.0f;
+
+            float division;
+            if (centeredText) {
+                division = 3;
+            } else {
+                division = 2.02;
+            }
             
             if (target_scale > 3.0f) {
                 target_scale = 3.0f;
             } else {
                 offset = cursor_pos.x - w/3/sr->camera_scale;
                 if (offset < 0.0f) offset = 0.0f;
-                target = vec2f(w/3/sr->camera_scale + offset, cursor_pos.y);
+                target = vec2f(w/division/sr->camera_scale + offset, cursor_pos.y);
             }
             
             // Instantly set the camera position and scale

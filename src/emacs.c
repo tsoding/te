@@ -1,4 +1,88 @@
 #include "emacs.h"
+#include "utilities.h"
+
+
+/* void emacs_ungry_delete_backwards(Editor *e) { */
+/*     if (e->searching || e->cursor == 0) return; */
+
+/*     size_t original_cursor = e->cursor; */
+/*     size_t start_pos = e->cursor; */
+/*     size_t last_newline_pos = 0; */
+/*     bool found_non_newline_whitespace = false; */
+/*     int newline_count = 0; */
+
+/*     // Move left to the start of contiguous whitespace or to the start of the file */
+/*     while (start_pos > 0 && isspace(e->data.items[start_pos - 1])) { */
+/*         if (e->data.items[start_pos - 1] == '\n') { */
+/*             newline_count++; */
+/*             last_newline_pos = start_pos - 1; */
+/*         } else { */
+/*             found_non_newline_whitespace = true; */
+/*         } */
+/*         start_pos--; */
+/*     } */
+
+/*     // If spanning multiple lines, delete but preserve one newline character. */
+/*     if (newline_count > 1 || (newline_count == 1 && found_non_newline_whitespace)) { */
+/*         start_pos = last_newline_pos + 1; */
+/*     } */
+
+/*     size_t length_to_delete = original_cursor - start_pos; */
+
+/*     if (length_to_delete > 0) { */
+/*         // Delete */
+/*         memmove(&e->data.items[start_pos], &e->data.items[original_cursor], e->data.count - original_cursor); */
+/*         e->data.count -= length_to_delete; */
+/*         e->cursor = start_pos; */
+
+/*         editor_retokenize(e); */
+/*     } */
+/* } */
+
+void emacs_ungry_delete_backwards(Editor *e) {
+    if (e->searching || e->cursor == 0) return;
+
+    size_t original_cursor = e->cursor;
+    size_t start_pos = e->cursor;
+    size_t last_newline_pos = 0;
+    bool found_non_newline_whitespace = false;
+    int newline_count = 0;
+    bool should_delete_single_character = true; // Assume we'll delete a single character by default
+
+    // Move left to the start of contiguous whitespace or to the start of the file
+    while (start_pos > 0 && isspace(e->data.items[start_pos - 1])) {
+        should_delete_single_character = false; // Found whitespace, so we won't be deleting just a single character
+        if (e->data.items[start_pos - 1] == '\n') {
+            newline_count++;
+            last_newline_pos = start_pos - 1;
+        } else {
+            found_non_newline_whitespace = true;
+        }
+        start_pos--;
+    }
+
+    // If spanning multiple lines, delete but preserve one newline character.
+    if ((newline_count > 1 || (newline_count == 1 && found_non_newline_whitespace)) && !should_delete_single_character) {
+        start_pos = last_newline_pos + 1;
+    } else if (should_delete_single_character) {
+        // If no preceding whitespace was found, adjust start_pos to delete just the last character
+        start_pos = original_cursor - 1;
+    }
+
+    size_t length_to_delete = original_cursor - start_pos;
+
+    if (length_to_delete > 0) {
+        // Perform the deletion
+        memmove(&e->data.items[start_pos], &e->data.items[original_cursor], e->data.count - original_cursor);
+        e->data.count -= length_to_delete;
+        e->cursor = start_pos;
+
+        indent(e);
+        editor_retokenize(e);
+    }
+}
+
+
 
 
 // TODO it delete the line if it is on whitespaces even if there is text

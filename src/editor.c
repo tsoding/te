@@ -16,28 +16,35 @@
 #include "evil.h"
 #include "theme.h"
 #include "M-x.h"
+#include "utilities.h"
 
+
+// TODO attach documentation to each variable
+// and make an interface to modify variables at runtime à la emacs
 
 bool quit = false;
 float zoom_factor = 3.0f;
 float min_zoom_factor = 1.0;
 float max_zoom_factor = 50.0;
 
-bool followCursor = true;
 bool isWave = false;
 size_t indentation = 4;
 
 bool showLineNumbers = false;
 bool highlightCurrentLineNumber = true;
-bool relativeLineNumbers = false;
+bool relativeLineNumbers = true;
 
 bool showWhitespaces = false;
 bool copiedLine = false;
 bool matchParenthesis = true;
 
-bool hl_line = false;
-bool superDrammtic = true;
+bool zoomInInsertMode = false;
 bool instantCamera = false;
+bool followCursor = true;
+bool centeredText = true;
+
+
+bool hl_line = false;
 bool showIndentationLines = true;
 
 bool showMinibuffer = true;
@@ -45,7 +52,7 @@ bool showModeline = true;
 float minibufferHeight = 21.0f;
 float modelineHeight = 35.0f;
 float modelineAccentWidth = 5.0f;
-bool ivy = false;
+bool fzy = false;
 bool M_x_active = false;
 bool evil_command_active = false;
 
@@ -59,12 +66,17 @@ bool automatic_zoom = true;
 float fringeWidth = 6.0f;
 bool showFringe = true;
 
+size_t fillColumn = 80;
+float fillColumnThickness = 5.0; // if 0, it default to the width of one character
+bool smartFillColumn = true;
+bool showFillColumn = true;
+
+
 bool ctrl_x_pressed = false;
 
 void reset_keychords() {
     ctrl_x_pressed = false;
 }
-
 
 void set_current_mode() {
     if (emacs) {
@@ -77,36 +89,6 @@ void set_current_mode() {
 }
 
 EvilMode current_mode = NORMAL;
-
-bool extract_word_under_cursor(Editor *editor, char *word) {
-    // Make a copy of cursor position to avoid modifying the actual cursor
-    size_t cursor = editor->cursor;
-
-    // Move left to find the start of the word.
-    while (cursor > 0 && isalnum(editor->data.items[cursor - 1])) {
-        cursor--;
-    }
-
-    // Check if the cursor is on a word or on whitespace/special character.
-    if (!isalnum(editor->data.items[cursor])) return false;
-
-    int start = cursor;
-
-    // Move right to find the end of the word.
-    while (cursor < editor->data.count && isalnum(editor->data.items[cursor])) {
-        cursor++;
-    }
-
-    int end = cursor;
-
-    // Copy the word to the provided buffer.
-    // Make sure not to overflow the buffer and null-terminate the string.
-    int length = end - start;
-    strncpy(word, &editor->data.items[start], length);
-    word[length] = '\0';
-
-    return true;
-}
 
 
 void move_camera(Simple_Renderer *sr, const char* direction, float amount) {
@@ -729,28 +711,6 @@ void editor_move_paragraph_down(Editor *e)
     e->cursor = e->lines.items[row].begin;
 }
 
-
-bool editor_is_line_empty(Editor *e, size_t row) {
-    if (row >= e->lines.count) return true; // Non-existent lines are considered empty
-
-    return e->lines.items[row].begin == e->lines.items[row].end;
-}
-
-bool editor_is_line_whitespaced(Editor *e, size_t row) {
-    if (row >= e->lines.count) return false;
-
-    size_t line_begin = e->lines.items[row].begin;
-    size_t line_end = e->lines.items[row].end;
-
-    for (size_t i = line_begin; i < line_end; ++i) {
-        if (!isspace(e->data.items[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-
 ssize_t find_matching_parenthesis(Editor *editor, size_t cursor_pos) {
     // Ensure the cursor position is within the valid range
     if (cursor_pos >= editor->data.count) return -1;
@@ -791,19 +751,7 @@ ssize_t find_matching_parenthesis(Editor *editor, size_t cursor_pos) {
     return -1;
 }
 
-size_t editor_row_from_pos(const Editor *e, size_t pos) {
-    assert(e->lines.count > 0);
-    for (size_t row = 0; row < e->lines.count; ++row) {
-        Line line = e->lines.items[row];
-        if (line.begin <= pos && pos <= line.end) {
-            return row;
-        }
-    }
-    return e->lines.count - 1;
-}
 
-
-//TODO BUG
 void editor_enter(Editor *e) {
     if (e->searching) {
         editor_stop_search_and_mark(e);
@@ -854,6 +802,9 @@ void editor_enter(Editor *e) {
                 editor_insert_char(e, ' ');
             }
         }
+
+        indent(e);
+
         e->last_stroke = SDL_GetTicks();
     }
 }
@@ -989,17 +940,6 @@ void editor_drag_line_up(Editor *editor) {
     editor_retokenize(editor);
 }
 
-float measure_whitespace_width(Free_Glyph_Atlas *atlas) {
-    Vec2f whitespaceSize = {0.0f, 0.0f};
-    free_glyph_atlas_measure_line_sized(atlas, " ", 1, &whitespaceSize);
-    return whitespaceSize.x;
-}
-
-float measure_whitespace_height(Free_Glyph_Atlas *atlas) {
-    Vec2f whitespaceSize = {0.0f, 0.0f};
-    free_glyph_atlas_measure_line_sized(atlas, " ", 1, &whitespaceSize);
-    return whitespaceSize.y;
-}
 
 void add_one_indentation_here(Editor *editor) {
     for (size_t i = 0; i < indentation; ++i) {
@@ -1153,37 +1093,6 @@ void indent(Editor *editor) {
 }
 
 
-size_t find_first_non_whitespace(const char* items, size_t begin, size_t end) {
-    size_t pos = begin;
-    while (pos < end && isspace((unsigned char)items[pos])) {
-        pos++;
-    }
-    return pos;
-}
-
-
-
-// TODO tomove
-bool extractLine(Editor *editor, size_t cursor, char *line, size_t max_length) {
-    size_t start = cursor;
-    while (start > 0 && editor->data.items[start - 1] != '\n') {
-        start--;
-    }
-
-    size_t end = start;
-    while (end < editor->data.count && editor->data.items[end] != '\n') {
-        end++;
-    }
-
-    size_t length = end - start;
-    if (length < max_length) {
-        strncpy(line, &editor->data.items[start], length);
-        line[length] = '\0';
-        return true;
-    }
-
-    return false;
-}
 
 bool extractLocalIncludePath(Editor *editor, char *includePath) {
     char line[512]; // Adjust size as needed
@@ -1460,32 +1369,6 @@ void editor_save_and_quit(Editor *e) {
     quit = true;
 }
 
-bool extract_word_left_of_cursor(Editor *e, char *word, size_t max_word_length) {
-    if (e->cursor == 0 || !isalnum(e->data.items[e->cursor - 1])) {
-        return false;
-    }
-
-    size_t end = e->cursor;
-    size_t start = end;
-
-    while (start > 0 && isalnum(e->data.items[start - 1])) {
-        start--;
-    }
-
-    size_t word_length = end - start;
-    if (word_length >= max_word_length) {
-        return false;
-    }
-
-    memcpy(word, &e->data.items[start], word_length);
-    word[word_length] = '\0';
-    e->cursor = start;
-    return true;
-}
-
-
-
-
 
 #define MAX_MATCHES 1024
 #define MAX_WORD_LENGTH 256
@@ -1614,12 +1497,7 @@ void get_cursor_position(const Editor *e, size_t *line, int *character) {
 
 
 
-
-
-
-
 // ANIMATIONS
-// TODO don't always update
 
 float easeOutCubic(float x) {
     return 1 - pow(1 - x, 3);

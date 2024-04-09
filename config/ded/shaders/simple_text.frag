@@ -15,7 +15,7 @@ void main() {
 
 
 // Dumb shadow
-// look good only with radon font
+/* look good only with radon font */
 /* #version 330 core */
 
 /* uniform sampler2D image; */

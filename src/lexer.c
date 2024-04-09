@@ -42,6 +42,7 @@ const char *cKeywords[] = {
     "using", "virtual", "wchar_t", "xor", "xor_eq",
 };
 
+
 /* #define keywords_count (sizeof(keywords)/sizeof(keywords[0])) */
 #define cKeywords_count (sizeof(cKeywords)/sizeof(cKeywords[0]))
 
@@ -54,8 +55,6 @@ const char *cTypeKeywords[] = {
 
 
 #define cTypeKeywords_count (sizeof(cTypeKeywords) / sizeof(cTypeKeywords[0]))
-
-
 
 
 const char *token_kind_name(Token_Kind kind)
@@ -322,7 +321,7 @@ Token lexer_next(Lexer *l)
                !isspace(l->content[l->cursor + potential_length]) &&
                l->content[l->cursor + potential_length] != '\n' &&
                l->content[l->cursor + potential_length] !=
-                   ')') { // Exclude closing parenthesis
+               ')') { // Exclude closing parenthesis
             potential_length++;
         }
 
@@ -430,6 +429,8 @@ Token lexer_next(Lexer *l)
     }
 
     // single quote
+    // TODO if there is only one quote,
+    // the text on the right should not be colored.
     if (l->content[l->cursor] == '\'') {
         token.kind = TOKEN_STRING;
         lexer_chop_char(l, 1);
@@ -495,21 +496,21 @@ Token lexer_next(Lexer *l)
 
     // TODO 
     // multi-line comments
-    /* if (lexer_starts_with(l, "/\*")) { */
-    /*     token.kind = TOKEN_COMMENT;  // Assuming you use the same token kind for single and multi-line comments */
-    /*     lexer_chop_char(l, 2);  // Skip the "/\*" */
+    if (lexer_starts_with(l, "/*")) {
+        token.kind = TOKEN_COMMENT;
+        lexer_chop_char(l, 2);  // Skip the "/*"
         
-    /*     while (l->cursor + 1 < l->content_len) { */
-    /*         if (l->content[l->cursor] == '*' && l->content[l->cursor + 1] == '/') { */
-    /*             lexer_chop_char(l, 2);  // Skip the "*\/" */
-    /*             break; */
-    /*         } */
-    /*         lexer_chop_char(l, 1); */
-    /*     } */
+        while (l->cursor + 1 < l->content_len) {
+            if (l->content[l->cursor] == '*' && l->content[l->cursor + 1] == '/') {
+                lexer_chop_char(l, 2);  // Skip the "*/"
+                break;
+            }
+            lexer_chop_char(l, 1);
+        }
         
-    /*     token.text_len = &l->content[l->cursor] - token.text; */
-    /*     return token; */
-    /* } */
+        token.text_len = &l->content[l->cursor] - token.text;
+        return token;
+    }
     
     // FUNCTION DEFINITION
     if (l->cursor < l->content_len && is_symbol_start(l->content[l->cursor])) {
@@ -576,12 +577,9 @@ Token lexer_next(Lexer *l)
             l->cursor = symbolStart;
         }
     }
-    
-    
 
-     
-
-     for (size_t i = 0; i < literal_tokens_count; ++i) {
+    
+    for (size_t i = 0; i < literal_tokens_count; ++i) {
         if (lexer_starts_with(l, literal_tokens[i].text)) {
             // NOTE: this code assumes that there is no newlines in literal_tokens[i].text
             size_t text_len = strlen(literal_tokens[i].text);
@@ -590,9 +588,8 @@ Token lexer_next(Lexer *l)
             lexer_chop_char(l, text_len);
             return token;
         }
-     }
+    }
 
- 
 
     if (is_symbol_start(l->content[l->cursor])) {
         token.kind = TOKEN_SYMBOL;
@@ -600,7 +597,7 @@ Token lexer_next(Lexer *l)
             lexer_chop_char(l, 1);
             token.text_len += 1;
         }
-
+         
         // First, check if the token is a type
         for (size_t i = 0; i < cTypeKeywords_count; ++i) {
             size_t keyword_len = strlen(cTypeKeywords[i]);

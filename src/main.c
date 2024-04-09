@@ -41,7 +41,6 @@
 #include "unistd.h"
 #include "M-x.h"
 #include "lsp.h"
-#include "treesitter.h"
 #include "clock.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
@@ -585,17 +584,13 @@ int main(int argc, char **argv)
 
                     case SDLK_t: {
                         if (SDL_GetModState() & KMOD_CTRL) {
-                            followCursor = !followCursor;  // Toggle the state
+                            followCursor = !followCursor;
                         }
                     }
                     break;
 
-                    // TODO check if the snippet activated if not indent
                     case SDLK_TAB: {
                         activate_snippet(&editor);
-                        for (size_t i = 0; i < indentation; ++i) {
-                            editor_insert_char(&editor, ' ');
-                        }
                         editor.last_stroke = SDL_GetTicks();
                     }
                     break;
@@ -615,6 +610,7 @@ int main(int argc, char **argv)
                         
                     case SDLK_p:
                         if (SDL_GetModState() & KMOD_CTRL){
+
                             editor_move_line_up(&editor);
                         }
                         editor.last_stroke = SDL_GetTicks();
@@ -709,12 +705,6 @@ int main(int argc, char **argv)
                             if (tmpEvent.type != SDL_TEXTINPUT || tmpEvent.text.text[0] != ':') {
                                 SDL_PushEvent(&tmpEvent); // Push the event back if it's not the one we're trying to consume
                             }
-                            
-                            // TODO ivy
-                            /* if (!ivy) { */
-                            /*     minibufferHeight += 189; */
-                            /*     ivy = true; */
-                            /* } */
                         }
                         break;
 
@@ -735,18 +725,20 @@ int main(int argc, char **argv)
                     break;
                                          
                     case SDLK_c:
-                        if (event.key.keysym.mod & KMOD_SHIFT) {
+                        if (event.key.keysym.mod & KMOD_CTRL) {
+                            centeredText = !centeredText;
+                        } else if (event.key.keysym.mod & KMOD_ALT) {
+                            instantCamera = !instantCamera;
+                        } else if (event.key.keysym.mod & KMOD_SHIFT) {
                             evil_change_line(&editor);
-                        } else if (event.key.keysym.mod & KMOD_CTRL) {
-                            automatic_zoom = !automatic_zoom;
+
+                            // Eat up the next SDL_TEXTINPUT event for 'C'
+                            SDL_PollEvent(&tmpEvent);
+                            if (tmpEvent.type != SDL_TEXTINPUT ||
+                                (tmpEvent.text.text[0] != 'C')) {
+                                SDL_PushEvent(&tmpEvent); // Push it back to the event queue if it's not
+                            }
                         }                            
-                        
-                        // Eat up the next SDL_TEXTINPUT event for 'C'
-                        SDL_PollEvent(&tmpEvent);
-                        if (tmpEvent.type != SDL_TEXTINPUT ||
-                            (tmpEvent.text.text[0] != 'C')) {
-                            SDL_PushEvent(&tmpEvent); // Push it back to the event queue if it's not
-                        }
                         break;
 
                     case SDLK_m:
@@ -755,12 +747,10 @@ int main(int argc, char **argv)
                         }
                         break;
 
-
-
                     case SDLK_ESCAPE: {
-                        if (ivy) {
+                        if (fzy) {
                             minibufferHeight -= 189;
-                            ivy = false;
+                            fzy = false;
                         }
 
                         if (editor.minibuffer_active) {
@@ -775,7 +765,6 @@ int main(int argc, char **argv)
                     }
                     break;
 
-
                     case SDLK_SPACE: {
                         if (SDL_GetModState() & KMOD_CTRL) {
                             if (!editor.has_anchor){
@@ -783,10 +772,10 @@ int main(int argc, char **argv)
                             } else {
                                 editor_goto_anchor_and_clear(&editor);
                             }
-                        } else if (!ivy) {
+                        } else if (!fzy) {
                             // TODO time delay whichkey
                             minibufferHeight += 189;
-                            ivy = true;
+                            fzy = true;
                         }
                     }
                     break;
@@ -856,14 +845,16 @@ int main(int argc, char **argv)
 
                     case SDLK_z: {
                         if (SDL_GetModState() & KMOD_CTRL) {
-                            helix_mode();
+                            /* helix_mode(); */
+                            current_mode = EMACS;
+                            editor.last_stroke = SDL_GetTicks();
                         }
                     }
                     break;
 
                   case SDLK_t: {
                     if (SDL_GetModState() & KMOD_CTRL) {
-                      followCursor = !followCursor;  // Toggle the state
+                      followCursor = !followCursor;
                     }
                   }
                     break;
@@ -945,15 +936,19 @@ int main(int argc, char **argv)
 
                   case SDLK_f:
                     if (SDL_GetModState() & KMOD_CTRL) {
-                        editor_move_char_right(&editor);
+                        followCursor = !followCursor;
+                        /* editor_move_char_right(&editor); */
                     }
                     break;
 
                     case SDLK_s: {
                         if (event.key.keysym.mod & KMOD_CTRL) {
-                            // Ctrl+S is pressed
-                            editor_start_search(&editor);
-                            current_mode = MINIBUFFER;
+                            if (ctrl_x_pressed) {
+                                editor_save(&editor);
+                            } else {
+                                editor_start_search(&editor);
+                                current_mode = MINIBUFFER;
+                            }
                         } else {
                             // Either S or Shift+S is pressed
                             if (event.key.keysym.mod & KMOD_SHIFT) {
@@ -1044,11 +1039,13 @@ int main(int argc, char **argv)
                       
                   case SDLK_a:
                     editor.last_stroke = SDL_GetTicks();
-                    if (SDL_GetModState() & KMOD_SHIFT) { // Check if shift is being held
+                    if (SDL_GetModState() & KMOD_CTRL) {
+                      automatic_zoom = !automatic_zoom;
+                      break;
+                    } else if (SDL_GetModState() & KMOD_SHIFT) {
                       editor_move_to_line_end(&editor);
                     } else {
-                      // Move the cursor one position to the right
-                      editor_move_char_right(&editor);
+                        editor_move_char_right(&editor);
                     }
 
                     current_mode = INSERT;
@@ -1079,10 +1076,10 @@ int main(int argc, char **argv)
                                 }
                             }
                             
-                            // TODO ivy
-                            /* if (!ivy) { */
+                            // TODO fzy
+                            /* if (!fzy) { */
                             /*     minibufferHeight += 189; */
-                            /*     ivy = true; */
+                            /*     fzy = true; */
                             /* } */
                         } else if (event.key.keysym.mod & KMOD_SHIFT) {
                             evil_delete_backward_char(&editor);
@@ -1108,17 +1105,18 @@ int main(int argc, char **argv)
                     }
                     break;
 
-                  case SDLK_BACKSPACE: //  yes you can delete in normal mode
-                    if (editor.selection) {
-                      editor_clipboard_copy(&editor);
-                      editor_delete_selection(&editor);
-                      editor.selection = false;
-                    } else if (event.key.keysym.mod & KMOD_CTRL) {
-                      emacs_backward_kill_word(&editor);
-                    } else {
-                      editor_backspace(&editor);
-                    }
-                    break;
+                    case SDLK_BACKSPACE: //  yes you can delete in normal mode
+                        if (editor.selection) {
+                            editor_clipboard_copy(&editor);
+                            editor_delete_selection(&editor);
+                            editor.selection = false;
+                        } else if (event.key.keysym.mod & KMOD_CTRL) {
+                            emacs_backward_kill_word(&editor);
+                        } else {
+                            emacs_ungry_delete_backwards(&editor);
+                            /* editor_backspace(&editor); */
+                        }
+                        break;
                     
                         
                     case SDLK_j:
@@ -1141,6 +1139,7 @@ int main(int argc, char **argv)
                         } else {
                             editor_move_line_down(&editor);
                         }
+                        mixSelectionColor = false;
                         editor.last_stroke = SDL_GetTicks();
                         break;
 
@@ -1159,6 +1158,7 @@ int main(int argc, char **argv)
                     } else {
                         editor_move_line_up(&editor);
                     }
+                    mixSelectionColor = false;
                     editor.last_stroke = SDL_GetTicks();
                     break;
 
@@ -1370,23 +1370,14 @@ int main(int argc, char **argv)
                       editor.last_stroke = SDL_GetTicks();
                       break;
 
-                      
-                  // TODO if no snippet was activated indent()
-                  // TODO if no snippet was activated dont move the cursor
                   case SDLK_TAB: {
-                      /* char word[MAX_SNIPPET_KEY_LENGTH]; */
-                      /* if (get_word_left_of_cursor(&editor, word, sizeof(word))) { */
                       activate_snippet(&editor);
-                      /* } else { */
-                      /*     indent(&editor); */
-                      /* } */
                       break;
                   }
 
-
                   case SDLK_F3:
-                    file_browser = true;
-                    break;
+                      file_browser = true;
+                      break;
 
                   case SDLK_MINUS:
                     if (SDL_GetModState() & KMOD_CTRL) {
@@ -1525,7 +1516,9 @@ int main(int argc, char **argv)
                       } else if (event.key.keysym.mod & KMOD_CTRL) {
                           emacs_backward_kill_word(&editor);
                           editor.last_stroke = SDL_GetTicks();
-                      }else{
+                      }else if (event.key.keysym.mod & KMOD_ALT) {
+                          emacs_ungry_delete_backwards(&editor);
+                      } else {
                           editor_backspace(&editor);
                       }
                       editor.last_stroke = SDL_GetTicks();
@@ -1793,10 +1786,10 @@ int main(int argc, char **argv)
                                 SDL_PushEvent(&tmpEvent); // Push the event back if it's not the one we're trying to consume
                             }
                             
-                            // TODO ivy
-                            /* if (!ivy) { */
+                            // TODO fzy
+                            /* if (!fzy) { */
                             /*     minibufferHeight += 189; */
-                            /*     ivy = true; */
+                            /*     fzy = true; */
                             /* } */
                         }
                         break;
@@ -1837,9 +1830,9 @@ int main(int argc, char **argv)
 
 
                     case SDLK_ESCAPE: {
-                        if (ivy) {
+                        if (fzy) {
                             minibufferHeight -= 189;
-                            ivy = false;
+                            fzy = false;
                         }
 
                         if (editor.minibuffer_active) {
@@ -1861,10 +1854,10 @@ int main(int argc, char **argv)
                             } else {
                                 editor_goto_anchor_and_clear(&editor);
                             }
-                        } else if (!ivy) {
+                        } else if (!fzy) {
                             // TODO time delay whichkey
                             minibufferHeight += 189;
-                            ivy = true;
+                            fzy = true;
                         }
                     }
                     break;
@@ -2157,10 +2150,10 @@ int main(int argc, char **argv)
                                 }
                             }
                             
-                            // TODO ivy
-                            /* if (!ivy) { */
+                            // TODO fzy
+                            /* if (!fzy) { */
                             /*     minibufferHeight += 189; */
-                            /*     ivy = true; */
+                            /*     fzy = true; */
                             /* } */
                         } else if (event.key.keysym.mod & KMOD_SHIFT) {
                             evil_delete_backward_char(&editor);
@@ -2320,9 +2313,9 @@ int main(int argc, char **argv)
                     switch (event.key.keysym.sym) {
 
                     case SDLK_ESCAPE: {
-                        if (ivy) {
+                        if (fzy) {
                             minibufferHeight -= 189;
-                            ivy = false;
+                            fzy = false;
                         }
 
                         if (editor.searching) {
@@ -2351,8 +2344,7 @@ int main(int argc, char **argv)
                         }
                         editor.last_stroke = SDL_GetTicks();
                         break;
-                      
-                    // TODO use editor_enter()
+
                     case SDLK_RETURN: {
                         editor_enter(&editor);
                     }
@@ -2413,26 +2405,20 @@ int main(int argc, char **argv)
 
             editor_render(window, &atlas, &sr, &editor);
             update_cursor_color(&editor);
-            render_search_text(&atlas, &sr, &editor);
 
-
-            if (fb.file_extension.items != NULL && strcmp(fb.file_extension.items, "json") == 0) {
-                tree(&editor, &fb);
-            }
-            
-          
             if (fb.file_extension.items != NULL && strcmp(fb.file_extension.items, "md") == 0) {
                 render_markdown(&atlas, &sr, &editor, &fb);
             }
 
- 
           
           if (M_x_active){
               render_minibuffer_content(&atlas, &sr, &editor, "M-x");
           } else if (evil_command_active) {
               render_minibuffer_content(&atlas, &sr, &editor, ":");
+          } else if (editor.searching) {
+              /* render_minibuffer_content(&atlas, &sr, &editor, "/"); */
+              render_search_text(&atlas, &sr, &editor);
           }
-          /* print_variable_doc("zoom_factor"); */
         }
 
         SDL_GL_SwapWindow(window);
