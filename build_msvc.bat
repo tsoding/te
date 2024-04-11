@@ -2,7 +2,8 @@
 rem launch this from msvc-enabled console
 
 set CFLAGS=/W4 /std:c11 /wd4996 /wd5105 /FC /TC /Zi /nologo
-set INCLUDES=/I dependencies\SDL2\include /I dependencies\freetype\include /I dependencies\minirent /I dependencies\GLFW\include /I dependencies\GLEW\include /I dependencies\miniconf /I dependencies\minifmt
+set INCLUDES=/I dependencies\SDL2\include /I dependencies\freetype\include /I dependencies\minirent /I dependencies\GLFW\include /I dependencies\GLEW\include /I dependencies\minilibs
+
 set LIBS=dependencies\SDL2\lib\x64\SDL2.lib ^
          dependencies\SDL2\lib\x64\SDL2main.lib ^
          dependencies\GLFW\lib\glfw3.lib ^
