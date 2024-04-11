@@ -1,0 +1,72 @@
+window:
+    font:  "./fonts/iosevka-regular.ttf
+    title: "ded
+    x: 100
+    y: 100
+    w: 800
+    h: 600
+
+pop up:
+    scale:   0.6
+    fade in: 300
+
+pop ups:
+    save ok:
+        str:   "Saved file!
+        color: x009966FF
+        last:  1000
+    invalid goto:
+        str:   "Invalid line(:col)
+        color: xFF2400FF
+        last:  2000
+    can not cd:
+        str:   "Can't change directory to "{path}"!
+        color: xFF2400FF
+        last:  2000
+    can not open:
+        str:   "Can't open file "{path}"!
+        color: xFF2400FF
+        last:  2000
+    can not save:
+        str:   "Can't save file: {err}!
+        color: xFF2400FF
+        last:  2000
+
+input hints:
+    find:    "find
+    save as: "path
+    save:    "path
+    goto:    "line
+
+editor:
+    background: x181818FF
+    color:      xFFFFFFFF
+    bottom bar:
+        scale: 0.6
+        background: xE7E7E7FF
+        input:
+            hint:
+                color:   x5B5B5BFF
+                fmt:     "({hint})
+                spacing: 20.0
+            content:
+                color: x181818FF
+        stats:
+            enabled: true
+            fmt: "{lang} {row}:{col} / {max-row}
+            color: x181818FF
+    tokens:
+        preprocessor directive: x95A99FFF
+        keyword: xFFDD33FF
+        comment: xCC8C3CFF
+        string:  x73C936FF
+    cursor:
+        blink:
+            treshold: 500
+            period:   1000
+        color: xFFFFFFFF
+        width: 5.0
+    selection:
+        color: x434343FF
+    search selection:
+        color: x191943FF

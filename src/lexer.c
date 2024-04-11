@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include "common.h"
 #include "lexer.h"
 
@@ -19,7 +20,27 @@ Literal_Token literal_tokens[] = {
 };
 #define literal_tokens_count (sizeof(literal_tokens)/sizeof(literal_tokens[0]))
 
-const char *keywords[] = {
+const char *jKeywords[] = {
+    "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class",
+    "const", "continue", "default", "do", "double", "else", "enum", "extends", "final",
+    "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int",
+    "interface", "long", "native", "new", "package", "private", "protected", "public",
+    "return", "short", "static", "super", "switch", "synchronized", "this", "throw",
+    "throws", "transient", "try", "void", "volatile", "while", "non-sealed", "open",
+    "opens", "permits", "provides", "record", "sealed", "to", "transitive", "uses", "var",
+    "with", "yield", "true", "false", "null", "const", "goto", "strictfp",
+};
+#define jKeywords_count (sizeof(jKeywords)/sizeof(jKeywords[0]))
+
+const char *ktKeywords[] = {
+    "abstract", "break", "catch", "class", "const", "continue", "else", "enum", "is", "as",
+    "when", "val", "var", "for", "if", "import", "interface", "data", "external", "inner",
+    "package", "private", "protected", "return", "super", "when",  "this", "throw",
+    "try", "while", "sealed", "open", "true", "false", "null", "fun", "typealias", "in",
+};
+#define ktKeywords_count (sizeof(ktKeywords)/sizeof(ktKeywords[0]))
+
+const char *cKeywords[] = {
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
     "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register",
     "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
@@ -34,44 +55,74 @@ const char *keywords[] = {
     "template", "this", "thread_local", "throw", "true", "try", "typeid", "typename",
     "using", "virtual", "wchar_t", "xor", "xor_eq",
 };
-#define keywords_count (sizeof(keywords)/sizeof(keywords[0]))
+#define cKeywords_count (sizeof(cKeywords)/sizeof(cKeywords[0]))
 
-const char *token_kind_name(Token_Kind kind)
-{
-    switch (kind) {
-    case TOKEN_END:
-        return "end of content";
-    case TOKEN_INVALID:
-        return "invalid token";
-    case TOKEN_PREPROC:
-        return "preprocessor directive";
-    case TOKEN_SYMBOL:
-        return "symbol";
-    case TOKEN_OPEN_PAREN:
-        return "open paren";
-    case TOKEN_CLOSE_PAREN:
-        return "close paren";
-    case TOKEN_OPEN_CURLY:
-        return "open curly";
-    case TOKEN_CLOSE_CURLY:
-        return "close curly";
-    case TOKEN_SEMICOLON:
-        return "semicolon";
-    case TOKEN_KEYWORD:
-        return "keyword";
-    default:
-        UNREACHABLE("token_kind_name");
-    }
-    return NULL;
-}
+const char *pyKeywords[] = {
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+    "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+    "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise",
+    "return", "try", "while", "with", "yield",
+};
+#define pyKeywords_count (sizeof(pyKeywords)/sizeof(pyKeywords[0]))
 
-Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len)
+const char *token_kind_name[TOKEN_KIND_SIZE] = {
+    [TOKEN_END] = "end of content",
+    [TOKEN_INVALID] = "invalid token",
+    [TOKEN_PREPROC] = "preprocessor directive",
+    [TOKEN_SYMBOL] = "symbol",
+    [TOKEN_OPEN_PAREN] = "open paren",
+    [TOKEN_CLOSE_PAREN] = "close paren",
+    [TOKEN_OPEN_CURLY] = "open curly",
+    [TOKEN_CLOSE_CURLY] = "close curly",
+    [TOKEN_SEMICOLON] = "semicolon",
+    [TOKEN_KEYWORD] = "keyword",
+    [TOKEN_COMMENT] = "comment",
+    [TOKEN_STRING] = "string",
+};
+
+Lexer lexer_new(Free_Glyph_Atlas *atlas, const char *content, size_t content_len, String_Builder file_path)
 {
     Lexer l = {0};
     l.atlas = atlas;
     l.content = content;
     l.content_len = content_len;
+    l.file_ext = FEXT_CPP;
+    if (file_path.items != NULL) {
+        l.file_path.items = (char*) malloc(sizeof(char*) * (strlen(file_path.items) + 1));
+        strcpy(l.file_path.items, file_path.items);
+
+        const char *filename = l.file_path.items;
+        const char *dot = strrchr(filename, '.');
+        if (dot && dot != filename) {
+            const char *file_ext_str = dot + 1;
+
+            if (strcmp(file_ext_str, "kt") == 0 || strcmp(file_ext_str, "kts") == 0) {
+                l.file_ext = FEXT_KOTLIN;
+            } else if (strcmp(file_ext_str, "py") == 0) {
+                l.file_ext = FEXT_PYTHON;
+            } else if (strcmp(file_ext_str, "java") == 0) {
+                l.file_ext = FEXT_JAVA;
+            }
+        }
+    }
+
     return l;
+}
+
+const char *file_ext_str(File_Extension ext)
+{
+    switch (ext) {
+        case FEXT_KOTLIN:
+            return "Kotlin";
+        case FEXT_JAVA:
+            return "Java";
+        case FEXT_CPP:
+            return "C++";
+        case FEXT_PYTHON:
+            return "Python";
+        default:
+            return "?";
+    }
 }
 
 bool lexer_starts_with(Lexer *l, const char *prefix)
@@ -202,6 +253,30 @@ Token lexer_next(Lexer *l)
             lexer_chop_char(l, 1);
             token.text_len += 1;
         }
+        
+        const char **keywords;
+        size_t keywords_count;
+        switch (l->file_ext) {
+            case FEXT_JAVA:
+                keywords = jKeywords;
+                keywords_count = jKeywords_count;
+            break;
+
+            case FEXT_KOTLIN:
+                keywords = ktKeywords;
+                keywords_count = ktKeywords_count;
+            break;
+
+            case FEXT_PYTHON:
+                keywords = pyKeywords;
+                keywords_count = pyKeywords_count;
+            break;
+
+            default:
+                keywords = cKeywords;
+                keywords_count = cKeywords_count;
+        }
+        
 
         for (size_t i = 0; i < keywords_count; ++i) {
             size_t keyword_len = strlen(keywords[i]);
@@ -210,7 +285,7 @@ Token lexer_next(Lexer *l)
                 break;
             }
         }
-
+        
         return token;
     }
 

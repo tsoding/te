@@ -44,6 +44,13 @@ typedef enum {
 } Simple_Shader;
 
 typedef struct {
+    Vec2f pos;
+    float scale;
+    float scale_vel;
+    Vec2f vel;
+} Simple_Camera;
+
+typedef struct {
     GLuint vao;
     GLuint vbo;
     GLuint programs[COUNT_SIMPLE_SHADERS];
@@ -56,10 +63,7 @@ typedef struct {
     Vec2f resolution;
     float time;
 
-    Vec2f camera_pos;
-    float camera_scale;
-    float camera_scale_vel;
-    Vec2f camera_vel;
+    Simple_Camera cam;
 } Simple_Renderer;
 
 void simple_renderer_init(Simple_Renderer *sr);

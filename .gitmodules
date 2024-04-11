@@ -1,0 +1,9 @@
+[submodule "dependencies/minirent"]
+	path = dependencies/minirent
+	url = https://github.com/alex-s168/minirent.git
+[submodule "dependencies/freetype"]
+	path = dependencies/freetype
+	url = https://github.com/ubawurinna/freetype-windows-binaries.git
+[submodule "dependencies/minilibs"]
+	path = dependencies/minilibs
+	url = https://github.com/alex-s168/minilibs.git

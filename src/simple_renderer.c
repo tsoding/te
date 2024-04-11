@@ -29,10 +29,11 @@ static const char *shader_type_as_cstr(GLuint shader)
     }
 }
 
-static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLuint *shader)
+static bool compile_shader_source(String_Builder source, GLenum shader_type, GLuint *shader)
 {
     *shader = glCreateShader(shader_type);
-    glShaderSource(*shader, 1, &source, NULL);
+    GLint source_count=(GLint)source.count;
+    glShaderSource(*shader, 1, &source.items, &source_count);
     glCompileShader(*shader);
 
     GLint compiled = 0;
@@ -62,7 +63,7 @@ static bool compile_shader_file(const char *file_path, GLenum shader_type, GLuin
     }
     sb_append_null(&source);
 
-    if (!compile_shader_source(source.items, shader_type, shader)) {
+    if (!compile_shader_source(source, shader_type, shader)) {
         fprintf(stderr, "ERROR: failed to compile `%s` shader file\n", file_path);
         return_defer(false);
     }
@@ -130,7 +131,7 @@ static void get_uniform_location(GLuint program, GLint locations[COUNT_UNIFORM_S
 
 void simple_renderer_init(Simple_Renderer *sr)
 {
-    sr->camera_scale = 3.0f;
+    sr->cam.scale = 3.0f;
 
     {
         glGenVertexArrays(1, &sr->vao);
@@ -321,8 +322,8 @@ void simple_renderer_set_shader(Simple_Renderer *sr, Simple_Shader shader)
     get_uniform_location(sr->programs[sr->current_shader], sr->uniforms);
     glUniform2f(sr->uniforms[UNIFORM_SLOT_RESOLUTION], sr->resolution.x, sr->resolution.y);
     glUniform1f(sr->uniforms[UNIFORM_SLOT_TIME], sr->time);
-    glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->camera_pos.x, sr->camera_pos.y);
-    glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->camera_scale);
+    glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->cam.pos.x, sr->cam.pos.y);
+    glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->cam.scale);
 }
 
 void simple_renderer_flush(Simple_Renderer *sr)

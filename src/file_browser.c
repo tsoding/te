@@ -105,26 +105,32 @@ Errno fb_change_dir(File_Browser *fb)
 
     const char *dir_name = fb->files.items[fb->cursor];
 
-    fb->dir_path.count -= 1;
+    String_Builder new_path = { 0 };
+    da_append_many(&new_path, fb->dir_path.items, fb->dir_path.count);
+
+    new_path.count -= 1;
 
     // TODO: fb->dir_path grows indefinitely if we hit the root
-    sb_append_cstr(&fb->dir_path, "/");
-    sb_append_cstr(&fb->dir_path, dir_name);
+    sb_append_cstr(&new_path, "/");
+    sb_append_cstr(&new_path, dir_name);
 
-    String_Builder result = {0};
-    normpath(sb_to_sv(fb->dir_path), &result);
-    da_move(&fb->dir_path, result);
-    sb_append_null(&fb->dir_path);
+    String_Builder result = { 0 };
+    normpath(sb_to_sv(new_path), &result);
+    da_move(&new_path, result);
+    sb_append_null(&new_path);
 
-    printf("Changed dir to %s\n", fb->dir_path.items);
-
-    fb->files.count = 0;
-    fb->cursor = 0;
-    Errno err = read_entire_dir(fb->dir_path.items, &fb->files);
-
+    Files new_files = { 0 };
+    Errno err = read_entire_dir(new_path.items, &new_files);
     if (err != 0) {
         return err;
     }
+
+    da_move(&fb->files, new_files);
+    da_move(&fb->dir_path, new_path);
+    fb->cursor = 0;
+
+    printf("Changed dir to %s\n", fb->dir_path.items);
+
     qsort(fb->files.items, fb->files.count, sizeof(*fb->files.items), file_cmp);
 
     return 0;
@@ -184,18 +190,18 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
         if (target_scale > 3.0f) {
             target_scale = 3.0f;
         } else {
-            offset = cursor_pos.x - w/3/sr->camera_scale;
+            offset = cursor_pos.x - w/3/sr->cam.scale;
             if (offset < 0.0f) offset = 0.0f;
-            target = vec2f(w/3/sr->camera_scale + offset, cursor_pos.y);
+            target = vec2f(w/3/sr->cam.scale + offset, cursor_pos.y);
         }
 
-        sr->camera_vel = vec2f_mul(
-                             vec2f_sub(target, sr->camera_pos),
+        sr->cam.vel = vec2f_mul(
+                             vec2f_sub(target, sr->cam.pos),
                              vec2fs(2.0f));
-        sr->camera_scale_vel = (target_scale - sr->camera_scale) * 2.0f;
+        sr->cam.scale_vel = (target_scale - sr->cam.scale) * 2.0f;
 
-        sr->camera_pos = vec2f_add(sr->camera_pos, vec2f_mul(sr->camera_vel, vec2fs(DELTA_TIME)));
-        sr->camera_scale = sr->camera_scale + sr->camera_scale_vel * DELTA_TIME;
+        sr->cam.pos = vec2f_add(sr->cam.pos, vec2f_mul(sr->cam.vel, vec2fs(DELTA_TIME)));
+        sr->cam.scale = sr->cam.scale + sr->cam.scale_vel * DELTA_TIME;
     }
 }
 

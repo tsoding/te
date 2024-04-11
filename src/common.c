@@ -18,6 +18,12 @@
 #include "./arena.h"
 #define SV_IMPLEMENTATION
 #include "sv.h"
+#define FILELIB_IMPL
+#include <filelib.h>
+#define MINICONF_IMPL
+#include <miniconf.h>
+#define MINIFMT_IMPL
+#include <minifmt.h>
 
 static Arena temporary_arena = {0};
 
@@ -64,56 +70,50 @@ defer:
 Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
 {
     Errno result = 0;
-    FILE *f = NULL;
+    if (buf == NULL)
+        return result;
 
-    f = fopen(file_path, "wb");
+    FILE *f = fopen(file_path, "wb");
     if (f == NULL) return_defer(errno);
 
-    fwrite(buf, 1, buf_size, f);
+    // TODO: why are there extra nulls at the end of the buf (buf_size)??
+    // that's why we strlen it here to get the size without these nulls
+    size_t real_buf_size = strlen(buf);
+    if (buf_size < real_buf_size)
+        real_buf_size = buf_size;
+    fwrite(buf, 1, real_buf_size, f);
+    if (get_last(buf, real_buf_size) != '\n') {
+        fputc('\n', f);
+    }
     if (ferror(f)) return_defer(errno);
 
 defer:
     if (f) fclose(f);
     return result;
-}
-
-static Errno file_size(FILE *file, size_t *size)
-{
-    long saved = ftell(file);
-    if (saved < 0) return errno;
-    if (fseek(file, 0, SEEK_END) < 0) return errno;
-    long result = ftell(file);
-    if (result < 0) return errno;
-    if (fseek(file, saved, SEEK_SET) < 0) return errno;
-    *size = (size_t) result;
-    return 0;
 }
 
 Errno read_entire_file(const char *file_path, String_Builder *sb)
 {
-    Errno result = 0;
-    FILE *f = NULL;
+    FILE *f = fopen(file_path, "r+");
+    if (f == NULL)
+         return 1;
 
-    f = fopen(file_path, "r");
-    if (f == NULL) return_defer(errno);
-
-    size_t size;
-    Errno err = file_size(f, &size);
-    if (err != 0) return_defer(err);
-
-    if (sb->capacity < size) {
-        sb->capacity = size;
-        sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items));
-        assert(sb->items != NULL && "Buy more RAM lol");
+    int c;
+    while ((c = fgetc(f)) != EOF && c != '\0') {
+        if (c == '\t') {
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+            da_append(sb, ' ');
+        } else if (c == '\r') {
+            continue;
+        } else {
+            da_append(sb, (char) c);
+        }
     }
 
-    fread(sb->items, size, 1, f);
-    if (ferror(f)) return_defer(errno);
-    sb->count = size;
-
-defer:
-    if (f) fclose(f);
-    return result;
+    fclose(f);
+    return 0;
 }
 
 Vec4f hex_to_vec4f(uint32_t color)
@@ -133,7 +133,17 @@ Vec4f hex_to_vec4f(uint32_t color)
 Errno type_of_file(const char *file_path, File_Type *ft)
 {
 #ifdef _WIN32
-#error "TODO: type_of_file() is not implemented for Windows"
+    DWORD file_obj_type = GetFileAttributesA(file_path);
+    if (file_obj_type & FILE_ATTRIBUTE_DIRECTORY) {
+        *ft = FT_DIRECTORY;
+    }
+    // I have no idea why, but a 'normal' file is considered an archive file?
+    else if (file_obj_type & FILE_ATTRIBUTE_ARCHIVE) {
+        *ft = FT_REGULAR;
+    }
+    else {
+        *ft = FT_OTHER;
+    }
 #else
     struct stat sb = {0};
     if (stat(file_path, &sb) < 0) return errno;
