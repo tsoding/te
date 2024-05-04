@@ -108,9 +108,6 @@ uint64_t simple_string_hash(const void *item, uint64_t seed0, uint64_t seed1) {
 }
 
 
-
-
-
 // HISTORY
 
 

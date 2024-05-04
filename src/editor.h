@@ -54,6 +54,8 @@ extern float fillColumnThickness;
 extern bool smartFillColumn;
 extern bool showFillColumn;
 
+extern bool readonly;
+
 // Emacs Style KeyChords
 extern bool ctrl_x_pressed;
 
@@ -81,7 +83,7 @@ typedef struct {
 
 
 
-//TODO minibuffer, replace, replace char, helix
+//TODO replace, replace char
 typedef enum {
     EMACS,
     HELIX,

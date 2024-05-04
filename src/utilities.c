@@ -126,6 +126,21 @@ size_t find_first_non_whitespace(const char* items, size_t begin, size_t end) {
     return pos;
 }
 
+size_t find_last_non_whitespace(const char* items, size_t begin, size_t end) {
+    if (end > begin) {
+        size_t pos = end;
+        do {
+            pos--;
+            if (!isspace((unsigned char)items[pos])) {
+                return pos + 1; // return the position right after the non-whitespace char
+            }
+        } while (pos > begin);
+    }
+    return begin; // If no non-whitespace found, return the beginning (handles the empty line case too)
+}
+
+
+
 bool is_number(const char *str) {
     if (!str || *str == '\0')
         return false;  // Empty string is not a number

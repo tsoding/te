@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "editor.h"
 
 #ifdef _WIN32
 #    define MINIRENT_IMPLEMENTATION
@@ -101,32 +102,95 @@ Errno create_new_file_here(const char *file_name)
     return result;
 }
 
-Errno read_entire_file(const char *file_path, String_Builder *sb)
-{
-    Errno result = 0;
-    FILE *f = NULL;
 
-    f = fopen(file_path, "r");
-    if (f == NULL) return_defer(errno);
+/* Errno read_entire_file(const char *file_path, String_Builder *sb) */
+/* { */
+/*     Errno result = 0; */
+/*     FILE *f = NULL; */
 
-    size_t size;
-    Errno err = file_size(f, &size);
-    if (err != 0) return_defer(err);
+/*     f = fopen(file_path, "r"); */
+/*     if (f == NULL) return_defer(errno); */
 
-    if (sb->capacity < size) {
-        sb->capacity = size;
-        sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items));
-        assert(sb->items != NULL && "Buy more RAM lol");
+/*     size_t size; */
+/*     Errno err = file_size(f, &size); */
+/*     if (err != 0) return_defer(err); */
+
+/*     if (sb->capacity < size) { */
+/*         sb->capacity = size; */
+/*         sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items)); */
+/*         assert(sb->items != NULL && "Buy more RAM lol"); */
+/*     } */
+
+/*     fread(sb->items, size, 1, f); */
+/*     if (ferror(f)) return_defer(errno); */
+/*     sb->count = size; */
+
+/* defer: */
+/*     if (f) fclose(f); */
+/*     return result; */
+/* } */
+
+
+// Convert tabs into 4 spaces
+// and ignore carriage returns
+/* Errno read_entire_file(const char *file_path, String_Builder *sb) { */
+/*     FILE *f = fopen(file_path, "r"); */
+/*     if (f == NULL) */
+/*          return 1; */
+
+/*     int c; */
+/*     while ((c = fgetc(f)) != EOF && c != '\0') { */
+/*         if (c == '\t') { */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*         } else if (c == '\r') { */
+/*             continue; */
+/*         } else { */
+/*             da_append(sb, (char) c); */
+/*         } */
+/*     } */
+
+/*     fclose(f); */
+/*     return 0; */
+/* } */
+
+
+// Convert tabs into 4 spaces
+// and ignore carriage returns
+Errno read_entire_file(const char *file_path, String_Builder *sb) {
+    FILE *f = fopen(file_path, "r+");
+    if (f == NULL) {
+        if (errno == EACCES) {
+            // Retry opening in read-only mode
+            f = fopen(file_path, "r");
+            if (f == NULL) return 1; // If opening still fails, return error
+            readonly = true;
+        } else {
+            return 1; // Other errors, return error
+        }
     }
 
-    fread(sb->items, size, 1, f);
-    if (ferror(f)) return_defer(errno);
-    sb->count = size;
+    int c;
+    while ((c = fgetc(f)) != EOF && c != '\0') {
+        if (c == '\t') {
+            for (int i = 0; i < indentation; i++) {
+                da_append(sb, ' ');
+            }
+        } else if (c == '\r') {
+            continue; // Ignore carriage returns
+        } else {
+            da_append(sb, (char)c);
+        }
+    }
 
-defer:
-    if (f) fclose(f);
-    return result;
+    fclose(f);
+    return 0;
 }
+
+
+
 
 bool is_hex_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');

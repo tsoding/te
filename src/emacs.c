@@ -1,43 +1,53 @@
 #include "emacs.h"
+#include "editor.h"
 #include "utilities.h"
 
+// Features i borrowed from emacs
 
-/* void emacs_ungry_delete_backwards(Editor *e) { */
-/*     if (e->searching || e->cursor == 0) return; */
+void emacs_mwim_beginning(Editor *e) {
+    if (e->cursor >= e->data.count) return;
+    size_t row = editor_cursor_row(e);
+    size_t line_begin = e->lines.items[row].begin;
+    size_t first_non_whitespace = find_first_non_whitespace(e->data.items, line_begin, e->lines.items[row].end);
 
-/*     size_t original_cursor = e->cursor; */
-/*     size_t start_pos = e->cursor; */
-/*     size_t last_newline_pos = 0; */
-/*     bool found_non_newline_whitespace = false; */
-/*     int newline_count = 0; */
+    if (e->cursor != first_non_whitespace) {
+        e->cursor = first_non_whitespace;
+    } else {
+        e->cursor = line_begin;
+    }
+}
 
-/*     // Move left to the start of contiguous whitespace or to the start of the file */
-/*     while (start_pos > 0 && isspace(e->data.items[start_pos - 1])) { */
-/*         if (e->data.items[start_pos - 1] == '\n') { */
-/*             newline_count++; */
-/*             last_newline_pos = start_pos - 1; */
-/*         } else { */
-/*             found_non_newline_whitespace = true; */
-/*         } */
-/*         start_pos--; */
-/*     } */
+void emacs_mwim_end(Editor *e) {
+    if (e->cursor >= e->data.count) return;
 
-/*     // If spanning multiple lines, delete but preserve one newline character. */
-/*     if (newline_count > 1 || (newline_count == 1 && found_non_newline_whitespace)) { */
-/*         start_pos = last_newline_pos + 1; */
-/*     } */
+    size_t row = editor_cursor_row(e);
+    size_t line_end = e->lines.items[row].end;
+    size_t last_non_whitespace = find_last_non_whitespace(e->data.items, e->lines.items[row].begin, line_end);
 
-/*     size_t length_to_delete = original_cursor - start_pos; */
+    if (e->cursor != last_non_whitespace) {
+        e->cursor = last_non_whitespace;
+    } else {
+        e->cursor = line_end;
+    }
+}
 
-/*     if (length_to_delete > 0) { */
-/*         // Delete */
-/*         memmove(&e->data.items[start_pos], &e->data.items[original_cursor], e->data.count - original_cursor); */
-/*         e->data.count -= length_to_delete; */
-/*         e->cursor = start_pos; */
+void emacs_delete_char(Editor *e) {
+    memmove(
+        &e->data.items[e->cursor],
+        &e->data.items[e->cursor + 1],
+        (e->data.count - e->cursor - 1) * sizeof(e->data.items[0])
+    );
+    e->data.count -= 1;
+    editor_retokenize(e);
+}
 
-/*         editor_retokenize(e); */
-/*     } */
-/* } */
+
+// TODO this is so bad
+void emacs_open_line(Editor *e) {
+    editor_insert_char(e, '\n');
+    editor_move_line_up(e);
+    e->last_stroke = SDL_GetTicks();
+}
 
 void emacs_ungry_delete_backwards(Editor *e) {
     if (e->searching || e->cursor == 0) return;
@@ -81,8 +91,6 @@ void emacs_ungry_delete_backwards(Editor *e) {
         editor_retokenize(e);
     }
 }
-
-
 
 
 // TODO it delete the line if it is on whitespaces even if there is text
@@ -170,6 +178,61 @@ void emacs_backward_kill_word(Editor *e) {
 
     editor_retokenize(e);
 }
+
+
+int killed_word_times = 0;
+
+void emacs_kill_word(Editor *e) {
+    editor_stop_search(e);
+
+    size_t start_pos = e->cursor;
+    size_t end_pos = e->cursor;
+
+    while (end_pos < e->data.count && !isalnum(e->data.items[end_pos])) {
+        end_pos++;
+    }
+
+    while (end_pos < e->data.count && isalnum(e->data.items[end_pos])) {
+        end_pos++;
+        if (isupper(e->data.items[end_pos]) && islower(e->data.items[end_pos - 1])) {
+            break;
+        }
+    }
+
+    if (start_pos < end_pos) {
+        size_t length = end_pos - start_pos;
+
+        if (killed_word_times == 0) {
+            e->clipboard.count = 0;
+        } else {
+            // Remove the existing null terminator before appending new content
+            if (e->clipboard.count > 0 && e->clipboard.items[e->clipboard.count - 1] == '\0') {
+                e->clipboard.count--;  // Decrement to remove the null terminator
+            }
+        }
+
+        sb_append_buf(&e->clipboard, &e->data.items[start_pos], length);
+        sb_append_null(&e->clipboard);  // Reapply the null terminator after appending
+
+        // Update the SDL clipboard content
+        if (SDL_SetClipboardText(e->clipboard.items) < 0) {
+            fprintf(stderr, "ERROR: SDL ERROR: %s\n", SDL_GetError());
+        }
+
+        // Perform the deletion
+        memmove(&e->data.items[start_pos], &e->data.items[end_pos], e->data.count - end_pos);
+        e->data.count -= length;
+        e->cursor = start_pos;
+
+        killed_word_times++;
+    } else {
+        killed_word_times = 0;
+    }
+
+    editor_retokenize(e);
+}
+
+
 
 void emacs_back_to_indentation(Editor *e) {
     if (e->cursor >= e->data.count) return;

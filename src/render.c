@@ -28,6 +28,9 @@ Vec4f blend_color(Vec4f color1, Vec4f color2, float blendFactor) {
 
 
 void render_fill_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
+
+    simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+
     float len = calculate_max_line_length(editor);
     if (smartFillColumn && len < fillColumn + 1 || showFillColumn == false) {
         return;
@@ -964,6 +967,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 color = CURRENT_THEME.multiplication;
                 break;
 
+            // TODO this should happen at lexing time not at render time 
             case TOKEN_COMMENT:
                 {
                     color = CURRENT_THEME.comment;

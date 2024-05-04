@@ -14,6 +14,7 @@ float measure_whitespace_width(Free_Glyph_Atlas *atlas);
 float measure_whitespace_height(Free_Glyph_Atlas *atlas);
 size_t find_first_non_whitespace(const char* items, size_t begin, size_t end);
 bool is_number(const char *str);
+size_t find_last_non_whitespace(const char* items, size_t begin, size_t end);
 
 
 

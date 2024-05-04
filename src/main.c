@@ -558,9 +558,7 @@ int main(int argc, char **argv)
               } else {
                 switch (current_mode) {
                 case EMACS:
-                    // TODO add all keybinds
                     switch (event.key.keysym.sym) {
-
                     
                     case SDLK_z: {
                         if (SDL_GetModState() & KMOD_CTRL) {
@@ -570,7 +568,68 @@ int main(int argc, char **argv)
                     }
                     break;
 
-                    
+                    case SDLK_y: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            editor_clipboard_paste(&editor);
+                            killed_word_times = 0;
+                            
+                            editor.last_stroke = SDL_GetTicks();
+                        }
+                    }
+                    break;
+
+
+                    case SDLK_d: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            if (SDL_GetModState() & KMOD_SHIFT) {
+                                emacs_kill_word(&editor);
+                            } else {
+                                emacs_delete_char(&editor);
+                            }
+                            editor.last_stroke = SDL_GetTicks();
+                        }
+                    }
+                    break;
+
+                    case SDLK_e: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            emacs_mwim_end(&editor);
+                            editor.last_stroke = SDL_GetTicks();
+
+                        }
+                    }
+                    break;
+
+                    case SDLK_a: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            emacs_mwim_beginning(&editor);
+                            editor.last_stroke = SDL_GetTicks();
+                        }
+                    }
+                    break;
+
+                    case SDLK_j: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            editor_enter(&editor);
+                        }
+                    }
+                    break;
+
+                    case SDLK_k: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            emacs_kill_line(&editor);
+                        }
+                    }
+                    break;
+
+                    case SDLK_o: {
+                        if (SDL_GetModState() & KMOD_CTRL) {
+                            emacs_open_line(&editor);
+
+                        }
+                    }
+                    break;
+
                     case SDLK_BACKSPACE:
                         if (event.key.keysym.mod & KMOD_CTRL) {
                             emacs_backward_kill_word(&editor);
@@ -595,23 +654,35 @@ int main(int argc, char **argv)
                     }
                     break;
                       
-                    case SDLK_r:
-                        if (event.key.keysym.mod & KMOD_CTRL) {
-                            file_browser = true;
-                        }
-                        break;
-                        
                     case SDLK_n: {
                         if (SDL_GetModState() & KMOD_CTRL) {
                             editor_move_line_down(&editor);
-                            editor.last_stroke = SDL_GetTicks();
+                        } else if (SDL_GetModState() & KMOD_ALT) {
+                            editor_move_paragraph_down(&editor);
+                            
+                            // Consume the next SDL_TEXTINPUT event for 'n'
+                            SDL_Event tmpEvent;
+                            SDL_PollEvent(&tmpEvent);
+                            if (tmpEvent.type != SDL_TEXTINPUT || tmpEvent.text.text[0] != 'n') {
+                                SDL_PushEvent(&tmpEvent); // Push the event back if it's not the one we're trying to consume
+                            }
                         }
+                        editor.last_stroke = SDL_GetTicks();
+                        
                     } break;
                         
                     case SDLK_p:
                         if (SDL_GetModState() & KMOD_CTRL){
-
                             editor_move_line_up(&editor);
+                        } else if (SDL_GetModState() & KMOD_ALT) {
+                            editor_move_paragraph_up(&editor);
+                            
+                            // Consume the next SDL_TEXTINPUT event for 'p'
+                            SDL_Event tmpEvent;
+                            SDL_PollEvent(&tmpEvent);
+                            if (tmpEvent.type != SDL_TEXTINPUT || tmpEvent.text.text[0] != 'p') {
+                                SDL_PushEvent(&tmpEvent); // Push the event back if it's not the one we're trying to consume
+                            }
                         }
                         editor.last_stroke = SDL_GetTicks();
                         break;
@@ -936,8 +1007,9 @@ int main(int argc, char **argv)
 
                   case SDLK_f:
                     if (SDL_GetModState() & KMOD_CTRL) {
-                        followCursor = !followCursor;
+                        /* followCursor = !followCursor; */
                         /* editor_move_char_right(&editor); */
+                        showFillColumn = !showFillColumn;
                     }
                     break;
 

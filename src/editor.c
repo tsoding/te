@@ -22,6 +22,8 @@
 // TODO attach documentation to each variable
 // and make an interface to modify variables at runtime à la emacs
 
+// TODO show lock logo in the modeline when the file is in read only mode
+
 bool quit = false;
 float zoom_factor = 3.0f;
 float min_zoom_factor = 1.0;
@@ -71,6 +73,10 @@ float fillColumnThickness = 5.0; // if 0, it default to the width of one charact
 bool smartFillColumn = true;
 bool showFillColumn = true;
 
+bool readonly = false; // TODO actually use this,
+//like don't save if its readonly and show a lock in the modeline
+
+
 
 bool ctrl_x_pressed = false;
 
@@ -104,7 +110,6 @@ void move_camera(Simple_Renderer *sr, const char* direction, float amount) {
         printf("Invalid direction '%s'\n", direction);
     }
 }
-
 
 // TODO if we are on a multiple of indentation delete the correct number of indentations
 void editor_backspace(Editor *e) {
@@ -348,6 +353,7 @@ Errno find_file(Editor *e, const char *file_path, size_t line, size_t column) {
     }
 
     printf("[find_file] File loaded and cursor set.\n");
+    printf("[find_file] Read only: %d\n", readonly);
     return 0;
 }
 
@@ -848,6 +854,8 @@ void editor_update_anchor(Editor *editor) {
 }
 
 
+
+// TODO refactor and implement drag region (selection)
 void editor_drag_line_down(Editor *editor) {
     size_t row = editor_cursor_row(editor);
     if (row >= editor->lines.count - 1) return; // Can't move the last line down
@@ -939,6 +947,8 @@ void editor_drag_line_up(Editor *editor) {
     // Retokenize
     editor_retokenize(editor);
 }
+
+
 
 
 void add_one_indentation_here(Editor *editor) {

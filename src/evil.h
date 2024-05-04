@@ -7,7 +7,6 @@
 void evil_open_below(Editor *editor);
 void evil_open_above(Editor *editor);
 void evil_jump_item(Editor *editor);
-void evil_jump_item(Editor *editor);
 void evil_join(Editor *e);
 void evil_yank_line(Editor *editor);
 void evil_paste_after(Editor *editor);
