@@ -1096,10 +1096,10 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 color = CURRENT_THEME.string;
                 break;
             case TOKEN_OPEN_CURLY:
-                color = CURRENT_THEME.string;
+                color = CURRENT_THEME.open_curly;
                 break;
             case TOKEN_CLOSE_CURLY:
-                color = CURRENT_THEME.string;
+                color = CURRENT_THEME.close_curly;
                 break;
 
             case TOKEN_COLOR: {

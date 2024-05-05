@@ -68,6 +68,8 @@ typedef struct {
     Vec4f nest5;
     Vec4f nest6;
     Vec4f fill_column;
+    Vec4f open_curly;
+    Vec4f close_curly;
 } Theme;
 
 #define CURRENT_THEME (currentTheme) // interpolated theme

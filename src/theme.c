@@ -6,7 +6,7 @@
 int currentThemeIndex = 0;
 int previousThemeIndex = 0;
 float interpolationProgress;
-Theme themes[9];
+Theme themes[10];
 Theme currentTheme;
 Theme previousTheme;
 
@@ -162,6 +162,8 @@ void update_theme_interpolation() {
     currentTheme.code_block = color_lerp(startTheme.code_block, endTheme.code_block, interpolationProgress);
     currentTheme.fringe = color_lerp(startTheme.fringe, endTheme.fringe, interpolationProgress);
     currentTheme.fill_column = color_lerp(startTheme.fill_column, endTheme.fill_column, interpolationProgress);
+    currentTheme.open_curly = color_lerp(startTheme.open_curly, endTheme.open_curly, interpolationProgress);
+    currentTheme.close_curly = color_lerp(startTheme.close_curly, endTheme.close_curly, interpolationProgress);
 
     if (interpolationProgress >= 1.0f) {
       interpolationProgress = 1.0f;
@@ -210,6 +212,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x4C6750FF),
       .falsee = hex_to_vec4f(0x867892FF),
       .arrow = hex_to_vec4f(0x834EB6FF),
+      .open_curly = hex_to_vec4f(0x4C6750FF),
+      .close_curly = hex_to_vec4f(0x4C6750FF),
       .open_square = hex_to_vec4f(0x514B8EFF),
       .close_square = hex_to_vec4f(0x514B8EFF),
       .array_content = hex_to_vec4f(0xC0ACD1FF),
@@ -277,6 +281,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x98BE65FF),
       .falsee = hex_to_vec4f(0xFF6C6BFF),
       .arrow = hex_to_vec4f(0xBBC2CFFF),
+      .open_curly = hex_to_vec4f(0x51AFEFFF),
+      .close_curly = hex_to_vec4f(0x51AFEFFF),
       .open_square = hex_to_vec4f(0xBBC2CFFF),
       .close_square = hex_to_vec4f(0xBBC2CFFF),
       .array_content = hex_to_vec4f(0xA9A1E1FF),
@@ -338,6 +344,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x50FA7BFF),
       .falsee = hex_to_vec4f(0xFF5555FF),
       .arrow = hex_to_vec4f(0x8BE9FDFF), // #8BE9FD
+      .open_curly = hex_to_vec4f(0xFF79C6FF),
+      .close_curly = hex_to_vec4f(0xFF79C6FF),
       .open_square = hex_to_vec4f(0xF8F8F2FF),
       .close_square = hex_to_vec4f(0xF8F8F2FF),
       .array_content = hex_to_vec4f(0xBD93F9FF),
@@ -399,6 +407,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0xC3E88DFF),
       .falsee = hex_to_vec4f(0xFF5370FF),
       .arrow = hex_to_vec4f(0xFFCB6BFF),
+      .open_curly = hex_to_vec4f(0xC792EAFF),
+      .close_curly = hex_to_vec4f(0xC792EAFF),
       .open_square = hex_to_vec4f(0xEEFFFFFF),
       .close_square = hex_to_vec4f(0xEEFFFFFF),
       .array_content = hex_to_vec4f(0x82AAFFFF), // #82AAFF
@@ -460,6 +470,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x8BD49CFF),
       .falsee = hex_to_vec4f(0xD95468FF),
       .arrow = hex_to_vec4f(0xA0B3C5FF),
+      .open_curly = hex_to_vec4f(0x5EC4FFFF),
+      .close_curly = hex_to_vec4f(0x5EC4FFFF),
       .open_square = hex_to_vec4f(0xA0B3C5FF),
       .close_square = hex_to_vec4f(0xA0B3C5FF),
       .array_content = hex_to_vec4f(0x539AFCFF),
@@ -521,6 +533,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0xB6E63EFF),
       .falsee = hex_to_vec4f(0xE74C3CFF),
       .arrow = hex_to_vec4f(0xD6D6D4FF),
+      .open_curly = hex_to_vec4f(0xFB2874FF),
+      .close_curly = hex_to_vec4f(0xFB2874FF),
       .open_square = hex_to_vec4f(0xD6D6D4FF),
       .close_square = hex_to_vec4f(0xD6D6D4FF),
       .array_content = hex_to_vec4f(0x9C91E4FF),
@@ -582,6 +596,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x6A7E74FF),
       .falsee = hex_to_vec4f(0xD46A7DFF),
       .arrow = hex_to_vec4f(0xCCCCC5FF),
+      .open_curly = hex_to_vec4f(0x6A7E74FF),
+      .close_curly = hex_to_vec4f(0x6A7E74FF),
       .open_square = hex_to_vec4f(0xCCCCC5FF),
       .close_square = hex_to_vec4f(0xCCCCC5FF),
       .array_content = hex_to_vec4f(0xCCCCC5FF),
@@ -642,6 +658,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0xFFFFFFFF),
       .falsee = hex_to_vec4f(0xFFFFFFFF),
       .arrow = hex_to_vec4f(0xA4A0E8FF), // #A4A0E8
+      .open_curly = hex_to_vec4f(0xDBBFEFFF),
+      .close_curly = hex_to_vec4f(0xDBBFEFFF),
       .open_square = hex_to_vec4f(0xA4A0E8FF),
       .close_square = hex_to_vec4f(0xA4A0E8FF),
       .array_content = hex_to_vec4f(0xA4A0E8FF),
@@ -702,6 +720,8 @@ void initialize_themes() {
       .truee = hex_to_vec4f(0x35BF88FF),
       .falsee = hex_to_vec4f(0xE55C7AFF),
       .arrow = hex_to_vec4f(0xD4D4D6FF),
+      .open_curly = hex_to_vec4f(0x11CCB2FF),
+      .close_curly = hex_to_vec4f(0x11CCB2FF),
       .open_square = hex_to_vec4f(0xD4D4D6FF),
       .close_square = hex_to_vec4f(0xD4D4D6FF),
       .array_content = hex_to_vec4f(0xD4D4D6FF),
@@ -727,6 +747,70 @@ void initialize_themes() {
       .code_block = hex_to_vec4f(0x191D26FF),
       .fill_column = hex_to_vec4f(0x272C3AFF), //#272C3A
   };
+
+   // doom-material-dark
+   themes[9] = (Theme){
+      .cursor = hex_to_vec4f(0xFFCB6BFF),
+      .notext_cursor = hex_to_vec4f(0xFFCB6BFF), 
+      .EOF_cursor = hex_to_vec4f(0xFFCB6BFF),    
+      .insert_cursor = hex_to_vec4f(0xFFCB6BFF),
+      .emacs_cursor = hex_to_vec4f(0xFFCB6BFF), 
+      .text = hex_to_vec4f(0xEEFFFFFF),
+      .background = hex_to_vec4f(0x212121FF),
+      .fringe = hex_to_vec4f(0x212121FF),
+      .comment = hex_to_vec4f(0x626262FF),
+      .hashtag = hex_to_vec4f(0x89DDFFFF),
+      .logic = hex_to_vec4f(0x89DDFFFF),
+      .string = hex_to_vec4f(0xC3E88DFF), //#C3E88D
+      .selection = hex_to_vec4f(0x406562FF),
+      .search = hex_to_vec4f(0x617446FF), 
+      .todo = hex_to_vec4f(0xFFCB6BFF),
+      .line_numbers = hex_to_vec4f(0x585858FF),
+      .current_line_number = hex_to_vec4f(0x89DDFFFF),
+      .fixme = hex_to_vec4f(0xF57373FF), //FIXME
+      .note = hex_to_vec4f(0xC3E88DFF), // NOTE
+      .bug = hex_to_vec4f(0xF57373FF),
+      .not_equals = hex_to_vec4f(0xF57373FF),
+      .exclamation = hex_to_vec4f(0xF57373FF),
+      .equals = hex_to_vec4f(0xC3E88DFF),
+      .equals_equals = hex_to_vec4f(0xC3E88DFF),
+      .greater_than = hex_to_vec4f(0xC3E88DFF),
+      .less_than = hex_to_vec4f(0xF57373FF),
+      .marks = hex_to_vec4f(0xF57373FF),
+      .fb_selection = hex_to_vec4f(0xF57373FF),
+      .plus = hex_to_vec4f(0xC3E88DFF),
+      .minus = hex_to_vec4f(0xF57373FF),
+      .truee = hex_to_vec4f(0xC3E88DFF),
+      .falsee = hex_to_vec4f(0xF57373FF),
+      .arrow = hex_to_vec4f(0xEEFFFFFF),
+      .open_curly = hex_to_vec4f(0xC792EAFF),
+      .close_curly = hex_to_vec4f(0xC792EAFF),
+      .open_square = hex_to_vec4f(0xC792EAFF),
+      .close_square = hex_to_vec4f(0xC792EAFF),
+      .array_content = hex_to_vec4f(0xEEFFFFFF),
+      .link = hex_to_vec4f(0x89DDFFFF),
+      .matching_parenthesis = hex_to_vec4f(0x171F24FF),
+      .type = hex_to_vec4f(0xC792EAFF),
+      .function_definition = hex_to_vec4f(0x82AAFFFF), //#82AAFF
+      .anchor = hex_to_vec4f(0xF57373FF),
+      .hl_line = hex_to_vec4f(0x303030FF), 
+      .multiplication = hex_to_vec4f(0xEEFFFFFF),
+      .pointer = hex_to_vec4f(0xEEFFFFFF),
+      .logic_and = hex_to_vec4f(0xC3E88DFF),
+      .logic_or = hex_to_vec4f(0xF57373FF),
+      .ampersand = hex_to_vec4f(0x82AAFFFF),
+      .pipe = hex_to_vec4f(0xC3E88DFF),
+      .minibuffer = hex_to_vec4f(0x212121FF),
+      .modeline = hex_to_vec4f(0x303030FF),
+      .modeline_accent = hex_to_vec4f(0xC792EAFF),
+      .whitespace = hex_to_vec4f(0x4A4A4AFF),
+      .selected_whitespaces = hex_to_vec4f(0x80CBC4FF),
+      .indentation_line = hex_to_vec4f(0x4A4A4AFF),
+      .null = hex_to_vec4f(0xF78C6CFF),
+      .code_block = hex_to_vec4f(0x303030FF),
+      .fill_column = hex_to_vec4f(0x4A4A4AFF),
+  };
+
 
 
 

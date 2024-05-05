@@ -101,6 +101,8 @@ Vec4f get_color_for_token_kind(Token_Kind kind) {
         case TOKEN_ARRAY_CONTENT: return currentTheme.array_content;
         case TOKEN_OPEN_SQUARE: return currentTheme.open_square;
         case TOKEN_CLOSE_SQUARE: return currentTheme.close_square;
+        case TOKEN_OPEN_CURLY: return currentTheme.open_curly;
+        case TOKEN_CLOSE_CURLY: return currentTheme.close_curly;
         default: return currentTheme.cursor;
     }
 }
