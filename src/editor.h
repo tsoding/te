@@ -55,8 +55,20 @@ extern bool smartFillColumn;
 extern bool showFillColumn;
 
 extern bool readonly;
+extern bool electric_mode;
+extern bool electric_pair_mode;
+extern bool delete_selection_mode;
 
-// Emacs Style KeyChords
+
+extern size_t long_file_lines;
+extern bool show_line_numbers_opening_long_files;
+extern bool decenter_text_opening_long_files;
+extern bool hide_line_numbers_opening_small_files;
+extern bool center_text_opening_small_files;
+
+
+// Simple Emacs Style Key Chords
+// TODO this is the simplest dumbest implementation
 extern bool ctrl_x_pressed;
 
 void reset_keychords();

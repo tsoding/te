@@ -1,86 +1,90 @@
+
 #+title: Todo
+* BUFFERS
+TODO [ ] save open buffers list on quit and cursor position for each of them 
+while ded is running keep them in memory, save them on quit to ~/.config/ded/buffers []
 
-* Editor
-Ctrl+n sometimes take 2 times to work []
+* Theme
+TODO [ ] each theme should have a name not only and index
+TODO [ ] Refactor theme.c it's a mess
+* Bugs
+opening a file with ded file.c that contain a
+function definition, trow a [1] 35755 segmentation fault (core dumped)
 
+* EDITING
+TODO [ ] option to add one space when typing "{" on the right of a closing ")"
+TODO [ ] option to add one space when typing "(" on the right of a keyword
+TODO [ ] when typing "'" or '"' check if there is a "'" or '"' on the right if so, simply move the cursor to the right once
+TODO [ ] when "/" is pressed in TEXTINPUT check if the line is empty or whitespaced, if its either of them add 2 "// "
+TODO [ ] move-function-up/down
+TODO [ ] drag-function-up/down
+TODO [ ] aggressive-indent-mode
+TODO [ ] select_function
+TODO [ ] Typing "{" inside of empty "()" moves it outside with a space padding after ")",
+correctly position the  matching "}", and move the cursor inside the block. Togglable.
+TODO [ ] pressing o on includes should spawn a new empty one and move cursor
 
-** Old
-pressing o on includes should spawn a new empty one and move cursor
+* SEARCH
+TODO [ ] if the search found nothing until the end of the file wrap arround
+TODO [ ] you can only type text already present in the file
+inside the search buffer, it should be possible to type anything
+(also highlight not found chars in red like emacs)
+TODO [ ] search should not be case sensitive
 
+* RENDER
+TODO IMPORTANT [ ] render the character under cursor using the same color as the bg
+TODO [ ] option to lerp syntax highlighting color in
+TODO LATER [ ] render whitespaced with error color when there is an error on a line
+TODO LATER [ ] dim unfocused splits the smaller they are (when we have splits)
+TODO [ ] sub-pixel font rendering
+TODO [ ] better markdown support
+TODO [ ] Togglable visibility of new lines
+TODO [ ] render wavy or normal line under text for errors or whatever []
+TODO [ ] Batch rendering
+TODO [ ] optional vscode style hl_line
+TODO [ ] render_trailing_whitespaced
+TODO [ ] line under links
+TODO [/] render circles (we need to use a shader for better performance)
+TODO [ ] render line numbers only on buffers with more than long-file
 
-when "/" is pressed in INSERT mode check if the line is empty or whitespaced,
-if its either of them add 2 "// " []
+* LSP
+TODO [ ] goto_definition
 
-option to add one space when typing "{" on the right of a closing ")" []
-option to add one space when typing "(" on the right of a keyword []
+* Dumb stuff to fix
+TODO [ ] measure_whitespace_width only once on font switch rather than 4 times every frame
+TODO [/]find_first_non_whitespace(and refactor, some functions could use it)
+TODO [ ] use window height and width dynamically instead of fixed position when animations are off
 
-when typing "'" or '"' check if there is a "'" or '"' on the right if so, simply move the cursor to the right once []
+* NEW FEATURES
+TODO [ ] map all variables to a docstring introspectable and modifiable at runtime
+TODO [ ] org mode support
+TODO [ ] format on save
+TODO [ ] Togglable emacs style camera centering []
+TODO LATER [ ] a reimplementation of imenu
+TODO [ ] multicursor
+TODO [ ] reimplementation of Iedit
+TODO [ ] Pipe selection to Unix command
 
+* EVIL MODE
+TODO [ ] Replace mode
+TODO [ ] Replace character mode
+TODO [ ] evil-find-char-backward
+TODO [ ] evil-visual-line-mode (the current implementation is so bad)
+TODO [ ] evil-search-backward
+TODO [ ] Universal argument (5k should work)
+TODO BUG [ ] Ctrl+n in insert mode sometimes take 2 times to work
 
-render line numbers only on buffers with more than ...
-lerp syntax highlighting in []
+* Font
+TODO [ ] changing font more times than the total number of font you have inside =~/.config/ded/fonts=
+make the text disappear
+* Lexer
+TODO [ ] support multi line tokens
+TODO [ ] check for strings in arrays
+TODO [ ] multi line comments []
+TODO IMPORTANT [ ] different vertex and fragment shader per token (need batch rendering)
+TODO different font per token []
 
-save open buffers list on quit and cursor position for each of them 
-while ded is running keep them in memory, save them on quit to 
-~/.config/ded/buffers []
-
-render whitespaces with error color when there is an error on a line []
-moveto function up/down []
-drag function up/down []
-
-dim unfocused splits the smaller they are []
-
-
-theme creator gui where colors update in real time []
-
-function to search code in a specific C case 
-
-map all variables to a string  and write the gui  to inspect variables st runtime and change them []
-
-move entire curly brace block of code on space as an option []
-
-if the search found nothing until the end of the file wrap arround
-and check from the start of the fil until the cursor []
-
-
-
-measure_whitespace_width only once on font switch rather
-than 4 times every frame []
-
-find_first_non_whitespace(and refactor) [/]
-select_function []
-org mode []
-md mode rendered as you type []
-refactor on write(save) []
-smarter editor_enter and editor_backspace []
-
-u can only type stuff that exist in the file in the
-search buffer, u should be able to type anything
-(also highlight not found stuff in red like emacs) []
-
-goto definition (a dumb version later i will integrate lsp)[]
-Togglable emacs like scroll for when animations are disabled []
-ivy for everything []
-imenu for function definition jump []
-sub-pixel antialiasing []
-multicursor[]
-Iedit[]
-Fringe(showing unsaved changes, and later with git integration )[]
-Replace mode []
-Replace character mode []
-Pipe selection to unix command []
-Togglable visibility of new lines[]
-show character under cursor with the same color as the bg[]
-search should not be case sensitive []
-render wavy or normal line under text for errors or whatever []
-use window hight and width dinamicly instead of fixed position when animations are off []
-
-
-Typing "{" inside of empty "()" moves it outside with a space padding after ")",
-correctly position the  matching "}", and move the cursor inside the block. Toggleable. []
-
-
-
+* DONE
 Togglable indentation lines[x]
 replace on typing when selection is true [x]
 most symple vim style completion (ctrl + n in insert mode)[/] TODO it should cycle like vim
@@ -103,60 +107,14 @@ Togglable visibility of whitespaces[x]
 different cursor color based on the mode[x]
 if editor->has_mark make the cursor trasparent [x]
 ctrl + backspace should delete an entire word [x]
-* cursor
-adjust syze based on overed glyph [x]
-* Font
-changing font more times than the total number of font you have inside =~/.config/ded/fonts=
-make the text disappear []
-* Camera
- when animation are false move the camera like in vim [x]
- togglable emacs style camera centering []
-* Shaders
+adjust size of the cursor based on hovered glyph [x]
 use shaders from =~/.config/ded/shaders= instead [x]
-* Lexer
-support multi line tokens []
-chech for strings in arrays []
-multi line comments []
-different vertex and fragment shader per token (need batch rendering) []
-different font per token []
 '' [x]
 NULL [x]
 syntax highlighting for : | || & && [x]
 highlight links [x]
-* Renderer 
-batch rendering []
-optional vscode hl_line []
-cchange hl_line color based on mode []
-render_trailing_whitespaces []
-line under links []
-render circles (we need to use a shader for better performance) [/]
-* Addresses
- showIndentationLines = 5555555792d2 i8
- currentThemeIndex    = 555559015340
-* Theme
-each theme should have a name not only and index
-* Evil
-evil-find-char-backward []
-evil-visual-line-mode []
-evil-search-backward []
-splits(maybe)   []
-5k should work []
-
 shift + i [x]
 evil-change-line(smarter version, don't delete ";") [x]
 evil-delete-backward-char [x]
 evil-search-word-forward (shift + 8) [x]
 shift + 5 [x]
-* Bugs
-opening a file with ded file.c that contain a
-function definition, trow a [1] 35755 segmentation fault (core dumped)
-
-activate_snippet on "if" take two times to activate
-also editor_backspace take 3 times to delete []
-* Ivy
-ivy copy headers []
-ivy find header []
-ivy find-lib []
-* LSP
-fuzzy find all the functions from the project root 
-

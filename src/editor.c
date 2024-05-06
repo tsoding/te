@@ -76,6 +76,29 @@ bool showFillColumn = true;
 bool readonly = false; // TODO actually use this,
 //like don't save if its readonly and show a lock in the modeline
 
+bool electric_mode = true; // whether to indent automatically when typing ";"" or "}"
+
+// When enabled, typing an open parenthesis automatically inserts the corresponding
+// closing parenthesis, and vice versa.  (Likewise for brackets, etc.).
+// If the region is active, the parentheses (brackets, etc.) are
+// inserted around the region instead. TODO
+bool electric_pair_mode = true;
+
+// When Delete Selection mode is enabled, typed text replaces the selection
+// if the selection is active.  Otherwise, typed text is just inserted at
+// point regardless of any selection.
+bool delete_selection_mode = true;
+
+// How many lines a file should have
+// to be considered a long file
+size_t long_file_lines = 100;
+
+bool show_line_numbers_opening_long_files = true;
+bool decenter_text_opening_long_files = true;
+
+bool hide_line_numbers_opening_small_files = true;
+bool center_text_opening_small_files = true;
+
 
 
 bool ctrl_x_pressed = false;
@@ -325,7 +348,6 @@ size_t get_position_from_line_column(Editor *e, size_t line, size_t column) {
     return line_start + current_column;
 }
 
-
 Errno find_file(Editor *e, const char *file_path, size_t line, size_t column) {
     char expanded_file_path[PATH_MAX];
     expand_path(file_path, expanded_file_path, sizeof(expanded_file_path));
@@ -339,6 +361,21 @@ Errno find_file(Editor *e, const char *file_path, size_t line, size_t column) {
     if (err != 0) {
         printf("[find_file] Error reading file: %d\n", err);
         return err;
+    }
+
+    size_t line_count = 0;
+    for (size_t i = 0; i < e->data.count && line_count <= long_file_lines; ++i) {
+        if (e->data.items[i] == '\n') {
+            line_count++;
+        }
+    }
+
+    if (line_count > long_file_lines) {
+        if (show_line_numbers_opening_long_files) showLineNumbers = true;
+        if (decenter_text_opening_long_files) centeredText = false;
+    } else {
+        if (hide_line_numbers_opening_small_files) showLineNumbers = false;
+        if (center_text_opening_small_files) centeredText = true;
     }
 
     e->cursor = get_position_from_line_column(e, line, column);
@@ -356,8 +393,6 @@ Errno find_file(Editor *e, const char *file_path, size_t line, size_t column) {
     printf("[find_file] Read only: %d\n", readonly);
     return 0;
 }
-
-
 
 size_t editor_cursor_row(const Editor *e)
 {
