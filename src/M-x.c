@@ -26,22 +26,22 @@ void register_command(struct hashmap *command_map, const char *name, void (*exec
 
 // TODO open-below && open-above && editor-enter behave weird
 void initialize_commands(struct hashmap *command_map) {
-    register_command(command_map, "open",            evil_open_below, 0);
-    register_command(command_map, "opena",           evil_open_above, 0);
-    register_command(command_map, "drag-down",       editor_drag_line_down, 0);
-    register_command(command_map, "drag-up",         editor_drag_line_up, 0);
-    register_command(command_map, "editor-enter",    editor_enter, 0);
-    register_command(command_map, "select",          select_region_from_brace, 0);
-    register_command(command_map, "back",            emacs_backward_kill_word, 0);
-    register_command(command_map, "evil-join",       evil_join, 0);
-    register_command(command_map, "evil-yank-line",  evil_yank_line, 0);
-    register_command(command_map, "open-include",    editor_open_include, 0);
-    register_command(command_map, "toggle",          toggle_bool, 0); // Wincompatible-function-pointer-types
-    register_command(command_map, "w",               editor_save, 0);
+    /* register_command(command_map, "open",            evil_open_below, 0); */
+    /* register_command(command_map, "opena",           evil_open_above, 0); */
+    /* register_command(command_map, "drag-down",       editor_drag_line_down, 0); */
+    /* register_command(command_map, "drag-up",         editor_drag_line_up, 0); */
+    /* register_command(command_map, "editor-enter",    editor_enter, 0); */
+    /* register_command(command_map, "select",          select_region_from_brace, 0); */
+    /* register_command(command_map, "back",            emacs_backward_kill_word, 0); */
+    /* register_command(command_map, "evil-join",       evil_join, 0); */
+    /* register_command(command_map, "evil-yank-line",  evil_yank_line, 0); */
+    /* register_command(command_map, "open-include",    editor_open_include, 0); */
+    /* register_command(command_map, "toggle",          toggle_bool, 0); // Wincompatible-function-pointer-types */
+    /* register_command(command_map, "w",               editor_save, 0); */
     register_command(command_map, "q",               editor_quit, 0);
-    register_command(command_map, "wq",              editor_save_and_quit, 0);
-    register_command(command_map, "go",              editor_goto_line, 1);
-    register_command(command_map, "def",             goto_definition, 0);
+    /* register_command(command_map, "wq",              editor_save_and_quit, 0); */
+    /* register_command(command_map, "go",              editor_goto_line, 1); */
+    /* register_command(command_map, "def",             goto_definition, 0); */
     register_command(command_map, "helix",           helix_mode, 0);
  
 }

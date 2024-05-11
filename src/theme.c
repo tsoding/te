@@ -164,6 +164,16 @@ void update_theme_interpolation() {
     currentTheme.fill_column = color_lerp(startTheme.fill_column, endTheme.fill_column, interpolationProgress);
     currentTheme.open_curly = color_lerp(startTheme.open_curly, endTheme.open_curly, interpolationProgress);
     currentTheme.close_curly = color_lerp(startTheme.close_curly, endTheme.close_curly, interpolationProgress);
+    currentTheme.fb_dir_name = color_lerp(startTheme.fb_dir_name, endTheme.fb_dir_name, interpolationProgress);
+    currentTheme.fb_size = color_lerp(startTheme.fb_size, endTheme.fb_size, interpolationProgress);
+    currentTheme.fb_date_time = color_lerp(startTheme.fb_date_time, endTheme.fb_date_time, interpolationProgress);
+    currentTheme.fb_no_priv = color_lerp(startTheme.fb_no_priv, endTheme.fb_no_priv, interpolationProgress);
+    currentTheme.fb_read_priv = color_lerp(startTheme.fb_read_priv, endTheme.fb_read_priv, interpolationProgress);
+    currentTheme.fb_write_priv = color_lerp(startTheme.fb_write_priv, endTheme.fb_write_priv, interpolationProgress);
+    currentTheme.fb_exec_priv = color_lerp(startTheme.fb_exec_priv, endTheme.fb_exec_priv, interpolationProgress);
+    currentTheme.fb_dir_priv = color_lerp(startTheme.fb_dir_priv, endTheme.fb_dir_priv, interpolationProgress);
+
+
 
     if (interpolationProgress >= 1.0f) {
       interpolationProgress = 1.0f;
@@ -244,6 +254,15 @@ void initialize_themes() {
       .nest5 = hex_to_vec4f(0x658B5FFF),
       .nest6 = hex_to_vec4f(0x514B8EFF),
       .fill_column = hex_to_vec4f(0x262626FF),
+      .fb_dir_name = hex_to_vec4f(0x658B5FFF),
+      .fb_size = hex_to_vec4f(0x48534AFF),
+      .fb_date_time = hex_to_vec4f(0x645B97FF),
+      .fb_no_priv = hex_to_vec4f(0x867892FF),
+      .fb_read_priv = hex_to_vec4f(0x565663FF),
+      .fb_write_priv = hex_to_vec4f(0x444E46FF),
+      .fb_exec_priv = hex_to_vec4f(0x4C6750FF),
+      .fb_dir_priv = hex_to_vec4f(0x658B5FFF),
+
   };
   
   // DOOM one
@@ -307,6 +326,16 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xA9A1E1FF),
       .code_block = hex_to_vec4f(0x23272EFF),
       .fill_column = hex_to_vec4f(0x42444AFF),
+      .fb_dir_name = hex_to_vec4f(0x51AFEFFF),
+      .fb_size = hex_to_vec4f(0xDA8548FF),
+      .fb_date_time = hex_to_vec4f(0x46D9FFFF),
+      .fb_no_priv = hex_to_vec4f(0x5B6268FF),
+      .fb_read_priv = hex_to_vec4f(0xECBE7BFF),
+      .fb_write_priv = hex_to_vec4f(0xFF6C6BFF),
+      .fb_exec_priv = hex_to_vec4f(0x98BE65FF),
+      .fb_dir_priv = hex_to_vec4f(0x51AFEFFF),
+
+
   };
 
   // Dracula
@@ -370,6 +399,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0x8BE9FDFF),
       .code_block = hex_to_vec4f(0x23242FFF),
       .fill_column = hex_to_vec4f(0x44475AFF),
+      .fb_dir_name = hex_to_vec4f(0x61BFFFFF),
+      .fb_size = hex_to_vec4f(0xFFB86CFF),
+      .fb_date_time = hex_to_vec4f(0x8BE9FDFF),
+      .fb_no_priv = hex_to_vec4f(0x6272A4FF),
+      .fb_read_priv = hex_to_vec4f(0xF1FA8CFF),
+      .fb_write_priv = hex_to_vec4f(0xFF5555FF),
+      .fb_exec_priv = hex_to_vec4f(0x50FA7BFF),
+      .fb_dir_priv = hex_to_vec4f(0x61BFFFFF),
+
   };
 
   // Palenigh
@@ -433,6 +471,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xF78C6CFF),
       .code_block = hex_to_vec4f(0x232635FF),
       .fill_column = hex_to_vec4f(0x3C435EFF),
+      .fb_dir_name = hex_to_vec4f(0x82AAFFFF),
+      .fb_size = hex_to_vec4f(0xF78C6CFF),
+      .fb_date_time = hex_to_vec4f(0x89DDFFFF),
+      .fb_no_priv = hex_to_vec4f(0x676E95FF),
+      .fb_read_priv = hex_to_vec4f(0xFFCB6BFF),
+      .fb_write_priv = hex_to_vec4f(0xFF5370FF),
+      .fb_exec_priv = hex_to_vec4f(0xC3E88DFF),
+      .fb_dir_priv = hex_to_vec4f(0x82AAFFFF),
+
   };
 
   // DOOM city lights
@@ -496,6 +543,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xE27E8DFF),
       .code_block = hex_to_vec4f(0x20282FFF),
       .fill_column = hex_to_vec4f(0x28323BFF),
+      .fb_dir_name = hex_to_vec4f(0x5EC4FFFF),
+      .fb_size = hex_to_vec4f(0xD98E48FF),
+      .fb_date_time = hex_to_vec4f(0x70E1E8FF),
+      .fb_no_priv = hex_to_vec4f(0x56697AFF),
+      .fb_read_priv = hex_to_vec4f(0xEBBF83FF),
+      .fb_write_priv = hex_to_vec4f(0xD95468FF),
+      .fb_exec_priv = hex_to_vec4f(0x8BD49CFF),
+      .fb_dir_priv = hex_to_vec4f(0x5EC4FFFF),
+
   };
 
   // DOOM molokai
@@ -559,6 +615,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xFD971FFF),
       .code_block = hex_to_vec4f(0x2D2E2EFF),
       .fill_column = hex_to_vec4f(0x4E4E4EFF),
+      .fb_dir_name = hex_to_vec4f(0x268BD2FF),
+      .fb_size = hex_to_vec4f(0xFD971FFF),
+      .fb_date_time = hex_to_vec4f(0x66D9EFFF),
+      .fb_no_priv = hex_to_vec4f(0x555556FF),
+      .fb_read_priv = hex_to_vec4f(0xE2C770FF),
+      .fb_write_priv = hex_to_vec4f(0xE74C3CFF),
+      .fb_exec_priv = hex_to_vec4f(0xB6E63EFF),
+      .fb_dir_priv = hex_to_vec4f(0x268BD2FF),
+
   };
 
   // SUNSET
@@ -622,6 +687,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xD46A7DFF),
       .code_block = hex_to_vec4f(0x0B0C11FF),
       .fill_column = hex_to_vec4f(0x28292DFF),
+      .fb_dir_name = hex_to_vec4f(0xD9A173FF),
+      .fb_size = hex_to_vec4f(0xCB6E7AFF),
+      .fb_date_time = hex_to_vec4f(0x718D87FF),
+      .fb_no_priv = hex_to_vec4f(0x8E8E89FF),
+      .fb_read_priv = hex_to_vec4f(0x9A8B6AFF),
+      .fb_write_priv = hex_to_vec4f(0xC06873FF),
+      .fb_exec_priv = hex_to_vec4f(0x6A7E74FF),
+      .fb_dir_priv = hex_to_vec4f(0xD9A173FF),
+
   };
 
   // Helix
@@ -686,6 +760,7 @@ void initialize_themes() {
       .fill_column = hex_to_vec4f(0x540099FF), // #540099
   };
 
+   // GUM
    themes[8] = (Theme){
       .cursor = hex_to_vec4f(0xD6A0D1FF),     //#D6A0D1
       .notext_cursor = hex_to_vec4f(0xD6A0D1FF), 
@@ -746,6 +821,15 @@ void initialize_themes() {
       .null = hex_to_vec4f(0x41B0F3FF),
       .code_block = hex_to_vec4f(0x191D26FF),
       .fill_column = hex_to_vec4f(0x272C3AFF), //#272C3A
+      .fb_dir_name = hex_to_vec4f(0x9587DDFF),
+      .fb_size = hex_to_vec4f(0xE361C3FF),
+      .fb_date_time = hex_to_vec4f(0xC79AF4FF),
+      .fb_no_priv = hex_to_vec4f(0x454459FF),
+      .fb_read_priv = hex_to_vec4f(0x49BDB0FF),
+      .fb_write_priv = hex_to_vec4f(0xF5C791FF),
+      .fb_exec_priv = hex_to_vec4f(0xE55C7AFF),
+      .fb_dir_priv = hex_to_vec4f(0x9587DDFF),
+
   };
 
    // doom-material-dark
@@ -809,6 +893,14 @@ void initialize_themes() {
       .null = hex_to_vec4f(0xF78C6CFF),
       .code_block = hex_to_vec4f(0x303030FF),
       .fill_column = hex_to_vec4f(0x4A4A4AFF),
+      .fb_dir_name = hex_to_vec4f(0x82AAFFFF),
+      .fb_size = hex_to_vec4f(0xF78C6CFF),
+      .fb_date_time = hex_to_vec4f(0x89DDFFFF),
+      .fb_no_priv = hex_to_vec4f(0x585858FF),
+      .fb_read_priv = hex_to_vec4f(0xFFCB6BFF),
+      .fb_write_priv = hex_to_vec4f(0xF57373FF),
+      .fb_exec_priv = hex_to_vec4f(0xC3E88DFF),
+      .fb_dir_priv = hex_to_vec4f(0x82AAFFFF),
   };
 
 

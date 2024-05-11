@@ -99,6 +99,8 @@ bool decenter_text_opening_long_files = true;
 bool hide_line_numbers_opening_small_files = true;
 bool center_text_opening_small_files = true;
 
+bool diredfl_mode = true;
+
 
 
 bool ctrl_x_pressed = false;

@@ -59,25 +59,53 @@ void render_fill_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *ed
     simple_renderer_flush(sr);
 }
 
-// TODO
-void render_search_text(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor) {
-    if (editor->searching) {
+void render_minibuffer_content(Free_Glyph_Atlas *atlas,
+                               Simple_Renderer *sr,
+                               Editor *editor,
+                               const char *prefixText)
+{
+    // Check if either the minibuffer or search mode is active
+    if (editor->minibuffer_active || editor->searching) {
         Vec4f cursorColor = CURRENT_THEME.cursor;
         Vec4f textColor = CURRENT_THEME.text;
-        Vec2f searchPos = {30.0f, 20.0f};
-        float minibufferCursorOffsett = 5.0f;
+        Vec2f textPos = {30.0f, 20.0f}; // Initial position
+        float prefixRightPadding = 0.0f;
+        float minibufferCursorOffset = 5.0f;
 
-        // Render the search text
+        // Apply the original logic for prefix padding
+        if (M_x_active) {
+            prefixRightPadding = 50.0f;
+        } else if (evil_command_active) {
+            prefixRightPadding = 0.0f;
+        } else if (editor->searching) {
+            prefixRightPadding = 50.0f;
+        }
+
+        // Render the prefix (visible in all cases)
+        free_glyph_atlas_render_line_sized(atlas, sr, prefixText, strlen(prefixText), &textPos, cursorColor);
+        float prefixWidth = free_glyph_atlas_measure_line_width(atlas, prefixText, strlen(prefixText));
+
+        // Adjust the position according to the prefix width and padding
+        if (!editor->searching) {
+            textPos.x += prefixRightPadding;
+        }
+
+        // Select which text to render (minibuffer or search)
+        const char *textToRender = editor->searching ? editor->search.items : editor->minibuffer_text.items;
+        size_t textLength = editor->searching ? editor->search.count : editor->minibuffer_text.count;
+
+        // Render the search or minibuffer text
         simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_TEXT);
-        free_glyph_atlas_render_line_sized(atlas, sr, editor->search.items, editor->search.count, &searchPos, textColor);
+        free_glyph_atlas_render_line_sized(atlas, sr, textToRender, textLength, &textPos, textColor);
 
-        // Set cursor position at the start of the text (we already used those we can change them)
-        searchPos.y = 0.0f;
-        searchPos.x += minibufferCursorOffsett;
-        Vec2f cursorPos = searchPos;
+        // Adjust the cursor position for the cursor offset
+        textPos.x += minibufferCursorOffset; // Adjust x for the cursor
+        textPos.y = 0.0f; // Reset y for the cursor
+        Vec2f cursorPos = textPos;
 
         // Set cursor size
         float cursor_width = measure_whitespace_width(atlas);
+        float minibufferHeight = 21.0f; // Set based on your minibuffer height
         Vec2f cursorSize = {cursor_width, minibufferHeight * 4.0f};
 
         // Render the cursor
@@ -85,56 +113,7 @@ void render_search_text(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *ed
         simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_COLOR);
         simple_renderer_solid_rect(sr, cursorPos, cursorSize, cursorColor);
 
-        // Flush the renderer
-        simple_renderer_flush(sr);
-    }
-}
-
-void render_minibuffer_content(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor, const char *prefixText) {
-    if (editor->minibuffer_active) {
-        Vec4f cursorColor = CURRENT_THEME.cursor;
-        Vec4f textColor = CURRENT_THEME.text;
-        Vec2f searchPos = {30.0f, 20.0f};
-        float prefixRightPadding;
-        float minibufferCursorOffsett = 5.0f;
-
-        if (M_x_active) {
-            prefixRightPadding = 50;
-        } else if (evil_command_active) {
-            prefixRightPadding = 0;
-        } else if (editor->searching) {
-            prefixRightPadding = 0;
-        }
-
-        if (editor->searching) {
-            // TODO
-        } else {
-            // Render the prefix
-            free_glyph_atlas_render_line_sized(atlas, sr, prefixText, strlen(prefixText), &searchPos, cursorColor);
-            
-            // Calculate the width of the prefix and adjust the position for minibuffer text
-            float prefixWidth = free_glyph_atlas_measure_line_width(atlas, prefixText, strlen(prefixText));
-            searchPos.x += prefixRightPadding;
-            
-            // Render the minibuffer text
-            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_TEXT);
-            free_glyph_atlas_render_line_sized(atlas, sr, editor->minibuffer_text.items, editor->minibuffer_text.count, &searchPos, textColor);
-            
-            // Adjust cursor position according to your original logic
-            searchPos.x += minibufferCursorOffsett; // Adjust x for the cursor
-            searchPos.y = 0.0f; // Reset y for the cursor
-            Vec2f cursorPos = searchPos;
-            
-            // Set cursor size
-            float cursor_width = measure_whitespace_width(atlas);
-            Vec2f cursorSize = {cursor_width, 21.0f * 4.0f}; // 21 is the minibufferHeight
-            
-            // Render the cursor
-            simple_renderer_flush(sr);
-            simple_renderer_set_shader(sr, VERTEX_SHADER_MINIBUFFER, SHADER_FOR_COLOR);
-            simple_renderer_solid_rect(sr, cursorPos, cursorSize, cursorColor);
-        }
-        // Flush the renderer
+        // Flush to ensure rendering is complete
         simple_renderer_flush(sr);
     }
 }

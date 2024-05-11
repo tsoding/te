@@ -1,5 +1,12 @@
 
 #+title: Todo
+* FILE BROWSER
+TODO IMPORTANT [ ] it crash the entire editor if there is a link
+
+* GIT
+TODO [ ] Git gutter
+TODO [ ] Magit
+
 * BUFFERS
 TODO [ ] save open buffers list on quit and cursor position for each of them 
 while ded is running keep them in memory, save them on quit to ~/.config/ded/buffers []
@@ -23,6 +30,9 @@ TODO [ ] select_function
 TODO [ ] Typing "{" inside of empty "()" moves it outside with a space padding after ")",
 correctly position the  matching "}", and move the cursor inside the block. Togglable.
 TODO [ ] pressing o on includes should spawn a new empty one and move cursor
+** Drag Stuff
+rename to drag_stuff_up/down/left/right
+it should behave differently if editor.selection
 
 * SEARCH
 TODO [ ] if the search found nothing until the end of the file wrap arround
@@ -75,14 +85,15 @@ TODO [ ] Universal argument (5k should work)
 TODO BUG [ ] Ctrl+n in insert mode sometimes take 2 times to work
 
 * Font
-TODO [ ] changing font more times than the total number of font you have inside =~/.config/ded/fonts=
-make the text disappear
+TODO [ ] changing font more times than the total number of font you have inside =~/.config/ded/fonts= make the text disappear
+TODO [ ] Better api to load fonts and refactor to use it 
 * Lexer
 TODO [ ] support multi line tokens
 TODO [ ] check for strings in arrays
 TODO [ ] multi line comments []
 TODO IMPORTANT [ ] different vertex and fragment shader per token (need batch rendering)
 TODO different font per token []
+TODO [ ] Correctly highlight "#!/bin/bash" and "#include <stdio.h>"
 
 * DONE
 Togglable indentation lines[x]

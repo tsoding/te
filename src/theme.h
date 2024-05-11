@@ -70,6 +70,14 @@ typedef struct {
     Vec4f fill_column;
     Vec4f open_curly;
     Vec4f close_curly;
+    Vec4f fb_size;
+    Vec4f fb_dir_name;
+    Vec4f fb_date_time;
+    Vec4f fb_no_priv;
+    Vec4f fb_read_priv;
+    Vec4f fb_write_priv;
+    Vec4f fb_exec_priv;
+    Vec4f fb_dir_priv;
 } Theme;
 
 #define CURRENT_THEME (currentTheme) // interpolated theme

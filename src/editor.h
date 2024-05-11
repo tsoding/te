@@ -66,6 +66,8 @@ extern bool decenter_text_opening_long_files;
 extern bool hide_line_numbers_opening_small_files;
 extern bool center_text_opening_small_files;
 
+extern bool diredfl_mode;
+
 
 // Simple Emacs Style Key Chords
 // TODO this is the simplest dumbest implementation
