@@ -7,7 +7,7 @@
 #include <GL/glew.h>
 
 #define GL_GLEXT_PROTOTYPES
-#include <SDL2/SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 
 #include "./la.h"
 

@@ -1,13 +1,13 @@
 @echo off
 
-curl -fsSL -o SDL2-devel-2.0.12-VC.zip https://www.libsdl.org/release/SDL2-devel-2.0.12-VC.zip
-tar -xf SDL2-devel-2.0.12-VC.zip
+curl -fsSL -o SDL3-devel-2.0-VC.zip https://www.libsdl.org/release/SDL3-devel-3.0-VC.zip
+tar -xf SDL3-devel-2.0-VC.zip
 if not exist dependencies\ mkdir dependencies\
-move SDL2-2.0.12 dependencies\SDL2
-del SDL2-devel-2.0.12-VC.zip
-if not exist dependencies\SDL2\temp\ mkdir dependencies\SDL2\temp\
-move dependencies\SDL2\include dependencies\SDL2\temp\SDL2
-move dependencies\SDL2\temp dependencies\SDL2\include
+move SDL3-3.0 dependencies\SDL3
+del SDL3-devel-3.0-VC.zip
+if not exist dependencies\SDL3\temp\ mkdir dependencies\SDL3\temp\
+move dependencies\SDL3\include dependencies\SDL3\temp\SDL3
+move dependencies\SDL3\temp dependencies\SDL3\include
 
 curl -fsSL -o glfw-3.3.2.bin.WIN64.zip https://github.com/glfw/glfw/releases/download/3.3.2/glfw-3.3.2.bin.WIN64.zip
 tar -xf glfw-3.3.2.bin.WIN64.zip

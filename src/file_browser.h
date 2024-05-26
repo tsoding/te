@@ -4,7 +4,7 @@
 #include "common.h"
 #include "free_glyph.h"
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 typedef struct {
     Files files;
