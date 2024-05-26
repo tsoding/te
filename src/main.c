@@ -4,11 +4,11 @@
 #include <errno.h>
 #include <string.h>
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #define GL_GLEXT_PROTOTYPES
-#include <SDL2/SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -110,9 +110,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    SDL_Window *window =
-        SDL_CreateWindow("ded",
-                         0, 0,
+    SDL_Window *window = SDL_CreateWindow("ded",
                          SCREEN_WIDTH, SCREEN_HEIGHT,
                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     if (window == NULL) {
@@ -159,6 +157,8 @@ int main(int argc, char **argv)
     editor.atlas = &atlas;
     editor_retokenize(&editor);
 
+    SDL_StartTextInput();
+
     bool quit = false;
     bool file_browser = false;
     while (!quit) {
@@ -166,12 +166,12 @@ int main(int argc, char **argv)
         SDL_Event event = {0};
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-            case SDL_QUIT: {
+            case SDL_EVENT_QUIT: {
                 quit = true;
             }
             break;
 
-            case SDL_KEYDOWN: {
+            case SDL_EVENT_KEY_DOWN: {
                 if (file_browser) {
                     switch (event.key.keysym.sym) {
                     case SDLK_F3: {
@@ -234,8 +234,8 @@ int main(int argc, char **argv)
                 } else {
                     switch (event.key.keysym.sym) {
                     case SDLK_HOME: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_to_begin(&editor);
                         } else {
                             editor_move_to_line_begin(&editor);
@@ -244,8 +244,8 @@ int main(int argc, char **argv)
                     } break;
 
                     case SDLK_END: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_to_end(&editor);
                         } else {
                             editor_move_to_line_end(&editor);
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_f: {
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_start_search(&editor);
                         }
                     }
@@ -307,12 +307,12 @@ int main(int argc, char **argv)
 
                     case SDLK_ESCAPE: {
                         editor_stop_search(&editor);
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
                     }
                     break;
 
                     case SDLK_a: {
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor.selection = true;
                             editor.select_begin = 0;
                             editor.cursor = editor.data.count;
@@ -335,22 +335,22 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_c: {
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_clipboard_copy(&editor);
                         }
                     }
                     break;
 
                     case SDLK_v: {
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_clipboard_paste(&editor);
                         }
                     }
                     break;
 
                     case SDLK_UP: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_paragraph_up(&editor);
                         } else {
                             editor_move_line_up(&editor);
@@ -360,8 +360,8 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_DOWN: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_paragraph_down(&editor);
                         } else {
                             editor_move_line_down(&editor);
@@ -371,8 +371,8 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_LEFT: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_word_left(&editor);
                         } else {
                             editor_move_char_left(&editor);
@@ -382,8 +382,8 @@ int main(int argc, char **argv)
                     break;
 
                     case SDLK_RIGHT: {
-                        editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
-                        if (event.key.keysym.mod & KMOD_CTRL) {
+                        editor_update_selection(&editor, event.key.keysym.mod & SDL_KMOD_SHIFT);
+                        if (event.key.keysym.mod & SDL_KMOD_CTRL) {
                             editor_move_word_right(&editor);
                         } else {
                             editor_move_char_right(&editor);
@@ -396,7 +396,7 @@ int main(int argc, char **argv)
             }
             break;
 
-            case SDL_TEXTINPUT: {
+            case SDL_EVENT_TEXT_INPUT: {
                 if (file_browser) {
                     // Nothing for now
                     // Once we have incremental search in the file browser this may become useful

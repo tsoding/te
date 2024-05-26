@@ -3,9 +3,9 @@
 set -xe
 
 CC="${CXX:-cc}"
-PKGS="sdl2 glew freetype2"
+PKGS="glew freetype2"
 CFLAGS="-Wall -Wextra -std=c11 -pedantic -ggdb"
-LIBS=-lm
+LIBS="-lm -lSDL3"
 SRC="src/main.c src/la.c src/editor.c src/file_browser.c src/free_glyph.c src/simple_renderer.c src/common.c src/lexer.c"
 
 if [ `uname` = "Darwin" ]; then

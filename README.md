@@ -6,7 +6,7 @@
 
 ## Dependencies
 
-- [SDL2 2.0.9+](https://www.libsdl.org/)
+- [SDL3 3.0+](https://www.libsdl.org/)
 - [FreeType 2.13.0+](https://freetype.org/)
 - [GLEW 2.1.0+](https://glew.sourceforge.net/)
 
