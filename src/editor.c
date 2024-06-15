@@ -33,6 +33,7 @@ bool isWave = false;
 size_t indentation = 4;
 
 bool showLineNumbers = false;
+bool showLineNumbersBackground = false;
 bool highlightCurrentLineNumber = true;
 bool relativeLineNumbers = true;
 
@@ -65,7 +66,7 @@ bool helix = false;
 bool emacs = false;
 bool automatic_zoom = true;
 
-float fringeWidth = 6.0f;
+float fringeWidth = 8.0f;
 bool showFringe = true;
 
 size_t fillColumn = 80;
@@ -100,6 +101,8 @@ bool hide_line_numbers_opening_small_files = true;
 bool center_text_opening_small_files = true;
 
 bool diredfl_mode = true;
+
+
 
 
 

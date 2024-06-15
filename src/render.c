@@ -59,12 +59,12 @@ void render_fill_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *ed
     simple_renderer_flush(sr);
 }
 
+
 void render_minibuffer_content(Free_Glyph_Atlas *atlas,
                                Simple_Renderer *sr,
                                Editor *editor,
                                const char *prefixText)
 {
-    // Check if either the minibuffer or search mode is active
     if (editor->minibuffer_active || editor->searching) {
         Vec4f cursorColor = CURRENT_THEME.cursor;
         Vec4f textColor = CURRENT_THEME.text;
@@ -72,7 +72,6 @@ void render_minibuffer_content(Free_Glyph_Atlas *atlas,
         float prefixRightPadding = 0.0f;
         float minibufferCursorOffset = 5.0f;
 
-        // Apply the original logic for prefix padding
         if (M_x_active) {
             prefixRightPadding = 50.0f;
         } else if (evil_command_active) {
@@ -81,7 +80,7 @@ void render_minibuffer_content(Free_Glyph_Atlas *atlas,
             prefixRightPadding = 50.0f;
         }
 
-        // Render the prefix (visible in all cases)
+        // Render the prefix
         free_glyph_atlas_render_line_sized(atlas, sr, prefixText, strlen(prefixText), &textPos, cursorColor);
         float prefixWidth = free_glyph_atlas_measure_line_width(atlas, prefixText, strlen(prefixText));
 
@@ -233,8 +232,20 @@ void render_markdown(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *edito
     }
 }
 
+void adjust_line_number_width(Editor *editor, float *lineNumberWidth) {
+  size_t lineCount = editor->lines.count;
 
-// TODO render_line_numbers_background
+  if (lineCount < 10) {
+    *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
+  } else if (lineCount < 100) {
+    *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
+  } else if (lineCount < 1000) {
+    *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
+  } else {
+    *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 4;
+  }
+}
+
 void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
     if (showLineNumbers) {
         simple_renderer_set_shader(sr, isWave ? VERTEX_SHADER_WAVE : VERTEX_SHADER_SIMPLE, SHADER_FOR_TEXT);
@@ -264,7 +275,7 @@ void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *e
         }
 
         for (size_t i = 0; i < lineCount; ++i) {
-            char lineNumberStr[12]; 
+            char lineNumberStr[12];
             
             size_t displayLineNumber = relativeLineNumbers ?
                 (i == currentLineNumber) ? currentLineNumber + 1 : abs((int)i - (int)currentLineNumber) :
@@ -272,7 +283,8 @@ void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *e
 
             snprintf(lineNumberStr, sizeof(lineNumberStr), "%*zu", lineNumberFieldWidth, displayLineNumber);
             
-            Vec2f pos = {0, -((float)i + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
+            int whitespace = measure_whitespace_width(atlas);
+            Vec2f pos = {whitespace, -((float)i + CURSOR_OFFSET) * FREE_GLYPH_FONT_SIZE};
 
             Vec4f colorToUse = (highlightCurrentLineNumber && i == currentLineNumber) ? currentLineColor : defaultColor;
             
@@ -283,18 +295,22 @@ void render_line_numbers(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *e
     }
 }
 
-void adjust_line_number_width(Editor *editor, float *lineNumberWidth) {
-    size_t lineCount = editor->lines.count;
-    
-    if (lineCount < 10) {          // Less than 10 lines
-        *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
-    } else if (lineCount < 100) {  // 10 to 99 lines
-        *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
-    } else if (lineCount < 1000) { // 100 to 999 lines
-        *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 3;
-    } else {                       // 1000 lines or more
-        *lineNumberWidth = FREE_GLYPH_FONT_SIZE * 4;
-    }
+void render_line_numbers_background(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor) {
+  if (!showLineNumbers ||!showLineNumbersBackground) return;
+
+  Vec4f backgroundColor = CURRENT_THEME.line_numbers_background;
+  float viewportHeight = sr->resolution.y / sr->camera_scale;
+
+  adjust_line_number_width(editor, &lineNumberWidth);
+
+  float characterWidth = measure_whitespace_width(atlas);
+  float lineNumberAreaWidth = lineNumberWidth + characterWidth;
+  Vec2f pos = {-characterWidth, sr->camera_pos.y - (viewportHeight / 2)};
+  Vec2f size = {lineNumberAreaWidth, viewportHeight};
+
+  simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+  simple_renderer_solid_rect(sr, pos, size, backgroundColor);
+  simple_renderer_flush(sr);
 }
 
 void render_whitespaces(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor) {
@@ -356,6 +372,7 @@ void render_indentation_lines(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Edit
     float COLUMN_THICKNESS = 5.0f;
     float CHARACTER_WIDTH = measure_whitespace_width(atlas);
     // This structure keeps track of open braces and their line start positions.
+    // TODO this should be done in the lexer
     struct LineSpan {
         size_t startLine;
         size_t endLine;
@@ -519,7 +536,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         }
     }
 
-  
+    render_line_numbers_background(sr, atlas, editor);
     render_line_numbers(sr, atlas, editor);
 
     // Render matching parenthesis
@@ -1079,6 +1096,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_flush(sr);
     }
 
+
     // render clock
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -1131,7 +1149,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 if (centeredText) {
                     division = 3;
                 } else {
-                    division = 2.02;
+                    division = 2.04;
                 }
 
                 offset = cursor_pos.x - w/3/sr->camera_scale;

@@ -19,6 +19,8 @@ typedef struct {
     Vec4f selection;
     Vec4f search;
     Vec4f line_numbers;
+    Vec4f current_line_number;
+    Vec4f line_numbers_background;
     Vec4f todo;
     Vec4f fixme;
     Vec4f note;
@@ -37,7 +39,6 @@ typedef struct {
     Vec4f open_square;
     Vec4f close_square;
     Vec4f array_content;
-    Vec4f current_line_number;
     Vec4f marks;
     Vec4f fb_selection;
     Vec4f link;

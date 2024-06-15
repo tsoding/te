@@ -175,7 +175,12 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
     sr->time = (float)SDL_GetTicks() / 1000.0f;
 
     // Highlight the selected file
-    simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+    if (isWave) {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_WAVE, SHADER_FOR_COLOR);
+    } else {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+    }
+
     if (fb->cursor < fb->files.count) {
         FileInfo highlighted_file = fb->files.items[fb->cursor];
         char highlighted_line[1024];
@@ -195,7 +200,11 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
     simple_renderer_flush(sr);
 
     // Render file attributes and names
-    simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_TEXT);
+    if (isWave) {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_WAVE, SHADER_FOR_TEXT);        
+    } else {
+        simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_TEXT);        
+    }
     for (size_t row = 0; row < fb->files.count; ++row) {
         FileInfo file = fb->files.items[row];
         Vec2f begin = vec2f(0, -(float)row * FREE_GLYPH_FONT_SIZE);

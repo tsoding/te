@@ -22,6 +22,7 @@ extern float zoom_factor;
 extern float min_zoom_factor;
 extern float max_zoom_factor;
 extern bool showLineNumbers;
+extern bool showLineNumbersBackground;
 extern bool isWave;
 extern bool showWhitespaces;
 extern bool hl_line;

@@ -12,10 +12,21 @@
 char vert_shader_file_path[COUNT_VERTEX_SHADERS][MAX_SHADER_PATH_LENGTH];
 char frag_shader_file_paths[COUNT_FRAGMENT_SHADERS][MAX_SHADER_PATH_LENGTH];
 
+/* void set_shader_path(char* buffer, const char* shaderName) { */
+/*     const char* home = getenv("HOME"); */
+/*     snprintf(buffer, MAX_SHADER_PATH_LENGTH, "%s/.config/ded/shaders/%s", home, shaderName); */
+/* } */
+
 void set_shader_path(char* buffer, const char* shaderName) {
     const char* home = getenv("HOME");
+    if (home == NULL) {
+        fprintf(stderr, "ERROR: HOME environment variable not set.\n");
+        return; // or handle error appropriately
+    }
     snprintf(buffer, MAX_SHADER_PATH_LENGTH, "%s/.config/ded/shaders/%s", home, shaderName);
+    fprintf(stderr, "Shader path set to: %s\n", buffer); // Debug statement
 }
+
 
 void initialize_shader_paths() {
     set_shader_path(vert_shader_file_path[VERTEX_SHADER_SIMPLE], "simple.vert");
@@ -27,6 +38,7 @@ void initialize_shader_paths() {
     set_shader_path(frag_shader_file_paths[SHADER_FOR_IMAGE], "simple_image.frag");
     set_shader_path(frag_shader_file_paths[SHADER_FOR_TEXT], "simple_text.frag");
     set_shader_path(frag_shader_file_paths[SHADER_FOR_EPICNESS], "simple_epic.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_RAINBOW], "simple_rainbow.frag");
     set_shader_path(frag_shader_file_paths[SHADER_FOR_GLOW], "simple_glow.frag");
     set_shader_path(frag_shader_file_paths[SHADER_FOR_CURSOR], "cursor.frag");
 }
@@ -63,6 +75,7 @@ static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLui
 
     return true;
 }
+
 
 static bool compile_shader_file(const char *file_path, GLenum shader_type, GLuint *shader)
 {
@@ -319,10 +332,6 @@ void simple_renderer_init(Simple_Renderer *sr) {
         }
     }
 }
-
-
-
-
 
 void simple_renderer_reload_shaders(Simple_Renderer *sr) {
     bool ok = true;

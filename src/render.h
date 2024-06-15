@@ -28,7 +28,7 @@ void render_markdown(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *edito
 void render_column(Simple_Renderer *sr, Free_Glyph_Atlas *atlas, Editor *editor);
 
 
-
+// TODO lerp tokens 
 typedef struct {
     Vec4f originalColor;
     Vec4f targetColor;

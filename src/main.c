@@ -348,6 +348,8 @@ int main(int argc, char **argv)
     }
 
     simple_renderer_init(&sr);
+
+
     free_glyph_atlas_init(&atlas, face);
 
     editor.atlas = &atlas;
@@ -670,7 +672,7 @@ int main(int argc, char **argv)
                         editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);
                         if (SDL_GetModState() & KMOD_CTRL){
                             editor_move_char_left(&editor);
-                        } else {
+                        } else if (SDL_GetModState() & KMOD_ALT) {
                             editor_move_word_left(&editor);
                         }
                         editor.last_stroke = SDL_GetTicks();
@@ -863,8 +865,6 @@ int main(int argc, char **argv)
                         }
                         break;
 
-
-                        
                     case SDLK_d:
                         if (event.key.keysym.mod & KMOD_SHIFT) {
                             emacs_kill_line(&editor);
@@ -1337,15 +1337,22 @@ int main(int argc, char **argv)
                         if (event.key.keysym.mod & KMOD_CTRL) {
                             if (event.key.keysym.mod & KMOD_SHIFT) {
                                 relativeLineNumbers = !relativeLineNumbers;
+                            } else if (event.key.keysym.mod & KMOD_ALT) {
+                                showLineNumbersBackground = !showLineNumbersBackground;
                             } else {
                                 showLineNumbers = !showLineNumbers;                                
                             }
+                            
                         } else if (event.key.keysym.mod & KMOD_ALT) {
-                            select_region_from_inside_braces(&editor);
+                          select_region_from_inside_braces(&editor);
                         } else {
-                            editor_move_char_right(&editor);
-                            // Toggle mixSelectionColor when Shift is pressed without Ctrl or Alt
-                            mixSelectionColor = (event.key.keysym.mod & KMOD_SHIFT) && !(event.key.keysym.mod & KMOD_CTRL) && !(event.key.keysym.mod & KMOD_ALT);
+                          editor_move_char_right(&editor);
+                          // Toggle mixSelectionColor when Shift is pressed
+                          // without Ctrl or Alt
+                          mixSelectionColor =
+                              (event.key.keysym.mod & KMOD_SHIFT) &&
+                              !(event.key.keysym.mod & KMOD_CTRL) &&
+                              !(event.key.keysym.mod & KMOD_ALT);
                         }
                         editor.last_stroke = SDL_GetTicks();
                         break;
@@ -2597,6 +2604,8 @@ int main(int argc, char **argv)
               render_minibuffer_content(&atlas, &sr, &editor, ":");
           } else if (editor.searching) {
               render_minibuffer_content(&atlas, &sr, &editor, "SEARCHING");
+          } else {
+              /* render_minibuffer_content(&atlas, &sr, &editor, "MESSAGES: "); */
           }
         }
 

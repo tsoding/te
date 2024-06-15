@@ -11,7 +11,7 @@ Theme currentTheme;
 Theme previousTheme;
 
 bool theme_lerp = true;
-float theme_lerp_speed = 0.005f;
+float theme_lerp_speed = 0.015f;
 float theme_lerp_treshold = 1.0f; // 0.5 mix themes
 
 Vec4f color_lerp(Vec4f start, Vec4f end, float t) {
@@ -172,6 +172,7 @@ void update_theme_interpolation() {
     currentTheme.fb_write_priv = color_lerp(startTheme.fb_write_priv, endTheme.fb_write_priv, interpolationProgress);
     currentTheme.fb_exec_priv = color_lerp(startTheme.fb_exec_priv, endTheme.fb_exec_priv, interpolationProgress);
     currentTheme.fb_dir_priv = color_lerp(startTheme.fb_dir_priv, endTheme.fb_dir_priv, interpolationProgress);
+    currentTheme.line_numbers_background = color_lerp(startTheme.line_numbers_background, endTheme.line_numbers_background, interpolationProgress);
 
 
 
@@ -195,8 +196,10 @@ void initialize_themes() {
       .insert_cursor = hex_to_vec4f(0x514B8EFF),
       .emacs_cursor = hex_to_vec4f(0x565663FF),
       .text = hex_to_vec4f(0xC0ACD1FF),
-      .background = hex_to_vec4f(0x090909FF),
-      .fringe = hex_to_vec4f(0x090909FF),
+      /* .background = hex_to_vec4f(0x090909FF), */
+      .background = hex_to_vec4f(0x0B0B0BFF),
+      /* .fringe = hex_to_vec4f(0x090909FF), */
+      .fringe = hex_to_vec4f(0x0B0B0BFF),
       .comment = hex_to_vec4f(0x867892FF),
       .hashtag = hex_to_vec4f(0x658B5FFF),
       .logic = hex_to_vec4f(0x658B5FFF),
@@ -262,9 +265,10 @@ void initialize_themes() {
       .fb_write_priv = hex_to_vec4f(0x444E46FF),
       .fb_exec_priv = hex_to_vec4f(0x4C6750FF),
       .fb_dir_priv = hex_to_vec4f(0x658B5FFF),
+      .line_numbers_background = hex_to_vec4f(0x090909FF),
 
   };
-  
+
   // DOOM one
   themes[1] = (Theme){
       .cursor = hex_to_vec4f(0x51AFEFFF),        // #51AFEF
@@ -318,6 +322,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0x51AFEFFF),
       .pipe = hex_to_vec4f(0x98BE65FF),
       .minibuffer = hex_to_vec4f(0x21242BFF),
+      .line_numbers_background = hex_to_vec4f(0x21242BFF),
       .modeline = hex_to_vec4f(0x1D2026FF),
       .modeline_accent = hex_to_vec4f(0x51AFEFFF),
       .whitespace = hex_to_vec4f(0x3F444AFF),
@@ -391,6 +396,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0x8BE9FDFF),
       .pipe = hex_to_vec4f(0x50FA7BFF),
       .minibuffer = hex_to_vec4f(0x1E2029FF), // #1E2029
+      .line_numbers_background = hex_to_vec4f(0x1E2029FF), // #1E2029
       .modeline = hex_to_vec4f(0x22232DFF),
       .modeline_accent = hex_to_vec4f(0xBD93F9FF),
       .whitespace = hex_to_vec4f(0x565761FF),
@@ -463,6 +469,7 @@ void initialize_themes() {
       .function_definition = hex_to_vec4f(0x82AAFFFF),
       .anchor = hex_to_vec4f(0xFF5370FF),
       .minibuffer = hex_to_vec4f(0x292D3EFF),
+      .line_numbers_background = hex_to_vec4f(0x292D3EFF),
       .modeline = hex_to_vec4f(0x232635FF),
       .modeline_accent = hex_to_vec4f(0xC792EAFF),
       .whitespace = hex_to_vec4f(0x4E5579FF),
@@ -481,6 +488,7 @@ void initialize_themes() {
       .fb_dir_priv = hex_to_vec4f(0x82AAFFFF),
 
   };
+
 
   // DOOM city lights
   themes[4] = (Theme){
@@ -535,6 +543,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0x5EC4FFFF),
       .pipe = hex_to_vec4f(0x8BD49CFF),
       .minibuffer = hex_to_vec4f(0x181E24FF),
+      .line_numbers_background = hex_to_vec4f(0x181E24FF),
       .modeline = hex_to_vec4f(0x181F25FF),
       .modeline_accent = hex_to_vec4f(0x5EC4FFFF),
       .whitespace = hex_to_vec4f(0x384551FF),
@@ -607,6 +616,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0x9C91E4FF),
       .pipe = hex_to_vec4f(0xB6E63EFF),
       .minibuffer = hex_to_vec4f(0x222323FF),
+      .line_numbers_background = hex_to_vec4f(0x222323FF),
       .modeline = hex_to_vec4f(0x2D2E2EFF),
       .modeline_accent = hex_to_vec4f(0xB6E63EFF),
       .whitespace = hex_to_vec4f(0x4E4E4EFF),
@@ -679,6 +689,7 @@ void initialize_themes() {
       .function_definition = hex_to_vec4f(0xE07084FF), // #E07084
       .anchor = hex_to_vec4f(0xE07084FF),
       .minibuffer = hex_to_vec4f(0x0C0D12FF),
+      .line_numbers_background = hex_to_vec4f(0x0C0D12FF),
       .modeline = hex_to_vec4f(0x08090CFF),
       .modeline_accent = hex_to_vec4f(0xD9A173FF),
       .whitespace = hex_to_vec4f(0x1B1B21FF),
@@ -750,6 +761,7 @@ void initialize_themes() {
       .function_definition = hex_to_vec4f(0xFFFFFFFF),
       .anchor = hex_to_vec4f(0xFFFFFFFF),
       .minibuffer = hex_to_vec4f(0x3B224CFF),
+      .line_numbers_background = hex_to_vec4f(0x3B224CFF),
       .modeline = hex_to_vec4f(0x281733FF),
       .modeline_accent = hex_to_vec4f(0x281733FF),
       .whitespace = hex_to_vec4f(0x281733FF),
@@ -813,6 +825,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0xC79AF4FF),
       .pipe = hex_to_vec4f(0x35BF88FF),
       .minibuffer = hex_to_vec4f(0x14171EFF),
+      .line_numbers_background = hex_to_vec4f(0x14171EFF),
       .modeline = hex_to_vec4f(0x191D26FF),
       .modeline_accent = hex_to_vec4f(0x9587DDFF),
       .whitespace = hex_to_vec4f(0x454459FF),
@@ -885,6 +898,7 @@ void initialize_themes() {
       .ampersand = hex_to_vec4f(0x82AAFFFF),
       .pipe = hex_to_vec4f(0xC3E88DFF),
       .minibuffer = hex_to_vec4f(0x212121FF),
+      .line_numbers_background = hex_to_vec4f(0x212121FF),
       .modeline = hex_to_vec4f(0x303030FF),
       .modeline_accent = hex_to_vec4f(0xC792EAFF),
       .whitespace = hex_to_vec4f(0x4A4A4AFF),
@@ -902,8 +916,6 @@ void initialize_themes() {
       .fb_exec_priv = hex_to_vec4f(0xC3E88DFF),
       .fb_dir_priv = hex_to_vec4f(0x82AAFFFF),
   };
-
-
 
 
   // Initialize currentTheme to the first theme
