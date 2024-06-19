@@ -247,7 +247,7 @@ Errno read_entire_file(const char *file_path, String_Builder *sb) {
     int c;
     while ((c = fgetc(f)) != EOF && c != '\0') {
         if (c == '\t') {
-            for (int i = 0; i < (int)indentation; i++) {
+            for (size_t i = 0; i < indentation; i++) {
                 da_append(sb, ' ');
             }
         } else if (c == '\r') {
