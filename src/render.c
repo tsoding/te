@@ -308,7 +308,10 @@ void render_line_numbers_background(Simple_Renderer *sr, Free_Glyph_Atlas *atlas
   Vec2f pos = {-characterWidth, sr->camera_pos.y - (viewportHeight / 2)};
   Vec2f size = {lineNumberAreaWidth, viewportHeight};
 
-  simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+  /* simple_renderer_set_shader(sr, VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR); */
+  simple_renderer_set_shader(
+      sr, isWave ? VERTEX_SHADER_WAVE : VERTEX_SHADER_SIMPLE, SHADER_FOR_COLOR);
+
   simple_renderer_solid_rect(sr, pos, size, backgroundColor);
   simple_renderer_flush(sr);
 }
@@ -494,7 +497,6 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
 
     // TODO shader switch
-    render_indentation_lines(sr, atlas, editor);
     render_selection(editor, sr, atlas);
     render_whitespaces(atlas, sr, editor);
 
@@ -538,6 +540,8 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
 
     render_line_numbers_background(sr, atlas, editor);
     render_line_numbers(sr, atlas, editor);
+
+    render_indentation_lines(sr, atlas, editor);
 
     // Render matching parenthesis
     {

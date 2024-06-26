@@ -40,6 +40,7 @@ const char *cKeywords[] = {
     "reinterpret_cast", "requires", "static_assert", "static_cast", "synchronized",
     "template", "this", "thread_local", "throw", "try", "typeid", "typename",
     "using", "virtual", "wchar_t", "xor", "xor_eq",
+    "let", "fn", "type", "defer", "println", "use", "impl", "loop", "match"
 };
 
 
@@ -49,10 +50,9 @@ const char *cKeywords[] = {
 
 const char *cTypeKeywords[] = {
     "char", "double", "float", "int", "long", "short", "signed", "unsigned", "void",
-    "_Bool", "_Complex", "_Imaginary", "bool", "Vec4f"
+    "_Bool", "_Complex", "_Imaginary", "bool", "Vec4f",
+    "i128", "i32", "i16", "i8", "u128", "u32", "u16", "u8", "str", "f32", "f16", "f8",
 };
-
-
 
 #define cTypeKeywords_count (sizeof(cTypeKeywords) / sizeof(cTypeKeywords[0]))
 
