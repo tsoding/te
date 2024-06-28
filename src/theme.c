@@ -3,10 +3,10 @@
 #include "editor.h"
 #include <stdbool.h>
 
-int currentThemeIndex = 0;
-int previousThemeIndex = 0;
+int currentThemeIndex = 9;
+int previousThemeIndex = 9;
 float interpolationProgress;
-Theme themes[10];
+Theme themes[11];
 Theme currentTheme;
 Theme previousTheme;
 
@@ -843,10 +843,82 @@ void initialize_themes() {
       .fb_exec_priv = hex_to_vec4f(0xE55C7AFF),
       .fb_dir_priv = hex_to_vec4f(0x9587DDFF),
 
-  };
+   };
+
+   // kaolin dark
+   themes[9] = (Theme){
+       .cursor = hex_to_vec4f(0xEFEFF1FF),
+       .notext_cursor = hex_to_vec4f(0xEFEFF1FF),
+       .EOF_cursor = hex_to_vec4f(0xEFEFF1FF),
+       .insert_cursor = hex_to_vec4f(0x9D81BAFF),
+       .emacs_cursor = hex_to_vec4f(0xEFEFF1FF),
+       .text = hex_to_vec4f(0xE4E4E8FF),
+       .background = hex_to_vec4f(0x18181BFF),
+       .fringe = hex_to_vec4f(0x18181BFF),
+       .comment = hex_to_vec4f(0x545C5EFF),
+       .hashtag = hex_to_vec4f(0x9D81BAFF),
+       .logic = hex_to_vec4f(0x4D9391FF),
+       .string = hex_to_vec4f(0x6FB593FF),
+       .selection = hex_to_vec4f(0x2E403BFF),
+       .search = hex_to_vec4f(0x303035FF),
+       .todo = hex_to_vec4f(0xDBAC66FF),
+       .line_numbers = hex_to_vec4f(0x303035FF),
+       .current_line_number = hex_to_vec4f(0x545C5EFF),
+       .fixme = hex_to_vec4f(0xCD5C60FF),
+       .note = hex_to_vec4f(0x6FB593FF),
+       .bug = hex_to_vec4f(0x6FB593FF),
+       .not_equals = hex_to_vec4f(0x6FB593FF),
+       .exclamation = hex_to_vec4f(0x6FB593FF),
+       .equals = hex_to_vec4f(0xE4E4E8FF),
+       .equals_equals = hex_to_vec4f(0xE4E4E8FF),
+       .greater_than = hex_to_vec4f(0xE4E4E8FF),
+       .less_than = hex_to_vec4f(0xE4E4E8FF),
+       .marks = hex_to_vec4f(0x2E403BFF),
+       .fb_selection = hex_to_vec4f(0xE4E4E8FF),
+       .plus = hex_to_vec4f(0xE4E4E8FF),
+       .minus = hex_to_vec4f(0xE4E4E8FF),
+       .truee = hex_to_vec4f(0x6FB593FF),
+       .falsee = hex_to_vec4f(0x6FB593FF),
+       .arrow = hex_to_vec4f(0xE4E4E8FF),
+       .open_curly = hex_to_vec4f(0xE4E4E8FF),
+       .close_curly = hex_to_vec4f(0xE4E4E8FF),
+       .open_square = hex_to_vec4f(0xE4E4E8FF),
+       .close_square = hex_to_vec4f(0xE4E4E8FF),
+       .array_content = hex_to_vec4f(0xE4E4E8FF),
+       .link = hex_to_vec4f(0x968CC7FF),
+       .matching_parenthesis = hex_to_vec4f(0x303035FF),
+       .type = hex_to_vec4f(0xCD9575FF),
+       .function_definition = hex_to_vec4f(0x80BCB6FF),
+       .anchor = hex_to_vec4f(0x968CC7FF),
+       .hl_line = hex_to_vec4f(0x222225FF),
+       .multiplication = hex_to_vec4f(0xE4E4E8FF),
+       .pointer = hex_to_vec4f(0xE4E4E8FF),
+       .logic_and = hex_to_vec4f(0xE4E4E8FF),
+       .logic_or = hex_to_vec4f(0xE4E4E8FF),
+       .ampersand = hex_to_vec4f(0xE4E4E8FF),
+       .pipe = hex_to_vec4f(0xE4E4E8FF),
+       .minibuffer = hex_to_vec4f(0x18181BFF),
+       .line_numbers_background = hex_to_vec4f(0x222225FF),
+       .modeline = hex_to_vec4f(0x222225FF),
+       .modeline_accent = hex_to_vec4f(0x968CC7FF),
+       .whitespace = hex_to_vec4f(0x222225FF),
+       .selected_whitespaces = hex_to_vec4f(0xE4E4E8FF),
+       .indentation_line = hex_to_vec4f(0x222225FF),
+       .null = hex_to_vec4f(0xAB98B5FF),
+       .code_block = hex_to_vec4f(0x222225FF),
+       .fill_column = hex_to_vec4f(0x222225FF),
+       .fb_dir_name = hex_to_vec4f(0x4D9391FF),
+       .fb_size = hex_to_vec4f(0xCD5C60FF),
+       .fb_date_time = hex_to_vec4f(0x9D81BAFF),
+       .fb_no_priv = hex_to_vec4f(0x545C5EFF),
+       .fb_read_priv = hex_to_vec4f(0x35BF88FF),
+       .fb_write_priv = hex_to_vec4f(0xBC90D4FF),
+       .fb_exec_priv = hex_to_vec4f(0xCD5C60FF),
+       .fb_dir_priv = hex_to_vec4f(0x4D9391FF),
+   };
 
    // doom-material-dark
-   themes[9] = (Theme){
+   themes[10] = (Theme){
       .cursor = hex_to_vec4f(0xFFCB6BFF),
       .notext_cursor = hex_to_vec4f(0xFFCB6BFF), 
       .EOF_cursor = hex_to_vec4f(0xFFCB6BFF),    
@@ -921,10 +993,11 @@ void initialize_themes() {
   // Initialize currentTheme to the first theme
   if (current_mode == HELIX) {
     currentTheme = themes[7];
-  } else {
-    currentTheme = themes[0];
   }
-  previousThemeIndex = 0;
-  currentThemeIndex = 0;
-  interpolationProgress = 1.0f; // No interpolation needed at start
+  /* } else { */
+  /*   currentTheme = themes[0]; */
+  /* } */
+  /* previousThemeIndex = 0; */
+  /* currentThemeIndex = 0; */
+  /* interpolationProgress = 1.0f; // No interpolation needed at start */
 }

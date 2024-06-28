@@ -84,7 +84,7 @@ void MessageCallback(GLenum source,
 
 static Free_Glyph_Atlas atlas = {0};
 static Simple_Renderer sr = {0};
-static Editor editor = {0};
+/* static Editor editor = {0}; */
 static File_Browser fb = {0};
 
 
@@ -2603,7 +2603,7 @@ int main(int argc, char **argv)
           } else if (evil_command_active) {
               render_minibuffer_content(&atlas, &sr, &editor, ":");
           } else if (editor.searching) {
-              render_minibuffer_content(&atlas, &sr, &editor, "SEARCHING");
+              render_minibuffer_content(&atlas, &sr, &editor, "/");
           } else {
               /* render_minibuffer_content(&atlas, &sr, &editor, "MESSAGES: "); */
           }

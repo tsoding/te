@@ -1,6 +1,7 @@
 #ifndef FREE_GLYPH_H_
 #define FREE_GLYPH_H_
 
+
 #include <stdlib.h>
 #include "./la.h"
 
@@ -45,10 +46,18 @@ typedef struct {
 void free_glyph_atlas_init(Free_Glyph_Atlas *atlas, FT_Face face);
 float free_glyph_atlas_cursor_pos(const Free_Glyph_Atlas *atlas, const char *text, size_t text_size, Vec2f pos, size_t col);
 void free_glyph_atlas_measure_line_sized(Free_Glyph_Atlas *atlas, const char *text, size_t text_size, Vec2f *pos);
-void free_glyph_atlas_render_line_sized(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, const char *text, size_t text_size, Vec2f *pos, Vec4f color);
+
+/* void free_glyph_atlas_render_line_sized(Free_Glyph_Atlas *atlas, Simple_Renderer *sr, const char *text, size_t text_size, Vec2f *pos, Vec4f color); */
+void free_glyph_atlas_render_line_sized(Free_Glyph_Atlas *atlas,
+                                        Simple_Renderer *sr, const char *text,
+                                        size_t text_size, Vec2f *pos,
+                                        Vec4f color);
+
+
 
 // ADDED
-
-float free_glyph_atlas_measure_line_width(Free_Glyph_Atlas *atlas, const char *text, size_t text_size);
+float free_glyph_atlas_measure_line_width(Free_Glyph_Atlas *atlas,
+                                          const char *text,
+                                          size_t text_size);
 
 #endif // FREE_GLYPH_H_

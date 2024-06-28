@@ -1,5 +1,6 @@
 #include <string.h>
 #include "file_browser.h"
+#include "la.h"
 #include "simple_renderer.h"
 #include "sv.h"
 #include "editor.h" // only for zoom_factor maybe im bad at programming
@@ -267,7 +268,7 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
     // Flush text rendering
     simple_renderer_flush(sr);
 
-    // Adjust the camera to follow the cursor or ensure the selected file is visible
+    /* Adjust the camera to follow the cursor or ensure the selected file is visible */
     if (followCursor) {
         if (max_line_len > 1000.0f) {
             max_line_len = 1000.0f;
@@ -292,6 +293,7 @@ void fb_render(const File_Browser *fb, SDL_Window *window, Free_Glyph_Atlas *atl
         sr->camera_pos = vec2f_add(sr->camera_pos, vec2f_mul(sr->camera_vel, vec2fs(DELTA_TIME)));
         sr->camera_scale += sr->camera_scale_vel * DELTA_TIME;
     }
+
 }
 
 

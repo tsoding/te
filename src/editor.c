@@ -7,7 +7,7 @@
 #include <limits.h>
 #include "./editor.h"
 #include "./common.h"
-#include "./free_glyph.h"
+/* #include "./free_glyph.h" */
 #include "./file_browser.h"
 #include "emacs.h"
 #include "lexer.h"
@@ -24,10 +24,12 @@
 
 // TODO show lock logo in the modeline when the file is in read only mode
 
+Editor editor = {0};
+
 bool quit = false;
 float zoom_factor = 3.0f;
 float min_zoom_factor = 1.0;
-float max_zoom_factor = 50.0;
+float max_zoom_factor = 100.0;
 
 bool isWave = false;
 size_t indentation = 4;
@@ -35,7 +37,7 @@ size_t indentation = 4;
 bool showLineNumbers = false;
 bool showLineNumbersBackground = false;
 bool highlightCurrentLineNumber = true;
-bool relativeLineNumbers = true;
+bool relativeLineNumbers = false;
 
 bool showWhitespaces = false;
 bool copiedLine = false;
@@ -101,8 +103,6 @@ bool hide_line_numbers_opening_small_files = true;
 bool center_text_opening_small_files = true;
 
 bool diredfl_mode = true;
-
-
 
 
 
@@ -409,6 +409,23 @@ size_t editor_cursor_row(const Editor *e)
         }
     }
     return e->lines.count - 1;
+}
+
+
+void get_cursor_position(const Editor *e) {
+  /* assert(e != NULL && line != NULL && character != NULL); */
+
+  // Get the line number
+  size_t line = editor_cursor_row(e);
+
+  // Find the start of the current line
+  size_t line_start = 0;
+  if (line > 0 && line < e->lines.count) {
+    line_start = e->lines.items[line].begin;
+  }
+
+  // Calculate the column number (character position)
+  int character = e->cursor - line_start;
 }
 
 void editor_move_line_up(Editor *e)
@@ -1525,21 +1542,6 @@ Errno editor_goto_line(Editor *editor, const char *params[]) {
     return 0;
 }
 
-void get_cursor_position(const Editor *e, size_t *line, int *character) {
-    assert(e != NULL && line != NULL && character != NULL);
-
-    // Get the line number
-    *line = editor_cursor_row(e);
-
-    // Find the start of the current line
-    size_t line_start = 0;
-    if (*line > 0 && *line < e->lines.count) {
-        line_start = e->lines.items[*line].begin;
-    }
-
-    // Calculate the column number (character position)
-    *character = e->cursor - line_start;
-}
 
 
 

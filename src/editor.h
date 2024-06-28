@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "common.h"
-#include "free_glyph.h"
+/* #include "free_glyph.h" */
 #include "simple_renderer.h"
 #include "lexer.h"
 #include <stdbool.h>
@@ -159,6 +159,8 @@ typedef struct {
 
 } Editor;
 
+extern Editor editor;
+
 Errno editor_save_as(Editor *editor, const char *file_path);
 Errno editor_save(const Editor *editor);
 /* Errno editor_load_from_file(Editor *editor, const char *file_path); */
@@ -233,7 +235,9 @@ void editor_save_and_quit(Editor *e);
 void find_matches_in_editor_data(Editor *e, const char *word, char **matches, size_t *matches_count);
 void evil_complete_next(Editor *e);
 Errno editor_goto_line(Editor *editor, const char *params[]);
-void get_cursor_position(const Editor *e, size_t *line, int *character);
+
+/* void get_cursor_position(const Editor *e, size_t *line, int *character); */
+void get_cursor_position(const Editor *e);
 
 
 void set_current_mode();

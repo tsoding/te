@@ -222,7 +222,8 @@ void goto_definition(Editor *e, File_Browser *fb) {
     get_current_file_uri(e, fb, file_uri, sizeof(file_uri));
     int character;
     size_t line;
-    get_cursor_position(e, &line, &character);
+    /* get_cursor_position(e, &line, &character); */
+    get_cursor_position(e);
 
     char params[512];
     int params_length = snprintf(params, sizeof(params),

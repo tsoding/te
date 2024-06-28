@@ -42,10 +42,11 @@ void emacs_delete_char(Editor *e) {
 }
 
 
-// TODO this is so bad
+// TODO it should not move the cursor at the start of the line
 void emacs_open_line(Editor *e) {
     editor_insert_char(e, '\n');
     editor_move_line_up(e);
+    indent(e);
     e->last_stroke = SDL_GetTicks();
 }
 

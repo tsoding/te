@@ -823,9 +823,8 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_flush(sr);
     }
 
-
-    
     // Render text
+    // TODO IMPORTANT alot of this stuff should not run every frame
     {
 
         if (isWave) {
@@ -835,6 +834,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         }
 
         for (size_t i = 0; i < editor->tokens.count; ++i) {
+
             Token token = editor->tokens.items[i];
             Vec2f pos = token.position;
             //Vec4f color = vec4fs(1);
@@ -985,43 +985,33 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 }
                 break;
 
-
             case TOKEN_EQUALS:
                 color = CURRENT_THEME.equals;
                 break;
-
             case TOKEN_EXCLAMATION:
                 color = CURRENT_THEME.exclamation;
                 break;
-
             case TOKEN_NOT_EQUALS:
                 color = CURRENT_THEME.not_equals;
                 break;
-
             case TOKEN_EQUALS_EQUALS:
                 color = CURRENT_THEME.equals_equals;
                 break;
-
-
             case TOKEN_LESS_THAN:
                 color = CURRENT_THEME.less_than;
                 break;
-
             case TOKEN_GREATER_THAN:
                 color = CURRENT_THEME.greater_than;
                 break;
             case TOKEN_ARROW:
                 color = CURRENT_THEME.arrow;
                 break;
-
             case TOKEN_MINUS:
                 color = CURRENT_THEME.minus;
                 break;
-
             case TOKEN_PLUS:
                 color = CURRENT_THEME.plus;
                 break;
-
             case TOKEN_TRUE:
                 color = CURRENT_THEME.truee;
                 break;
@@ -1049,7 +1039,6 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             case TOKEN_CLOSE_CURLY:
                 color = CURRENT_THEME.close_curly;
                 break;
-
             case TOKEN_COLOR: {
                     unsigned long long hex_value;
                     if(sscanf(token.text, "0x%llx", &hex_value) == 1) {
@@ -1060,7 +1049,7 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             default:
                 {}
             }
-            
+
             free_glyph_atlas_render_line_sized(atlas, sr, token.text, token.text_len, &pos, color);
             // TODO: the max_line_len should be calculated based on what's visible on the screen right now
             if (max_line_len < pos.x) max_line_len = pos.x;
@@ -1088,7 +1077,6 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
             simple_renderer_solid_rect(sr, (Vec2f){0.0f, minibufferHeight}, (Vec2f){w, modelineHeight}, CURRENT_THEME.modeline);
             // render accent
             simple_renderer_solid_rect(sr, (Vec2f){0.0f, minibufferHeight}, (Vec2f){modelineAccentWidth, modelineHeight}, CURRENT_THEME.modeline_accent);
-            simple_renderer_flush(sr);
         }
     }
 
@@ -1099,6 +1087,8 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
         simple_renderer_solid_rect(sr, (Vec2f){0.0f, modelineHeight + minibufferHeight}, (Vec2f){fringeWidth, h}, CURRENT_THEME.fringe);
         simple_renderer_flush(sr);
     }
+
+
 
 
     // render clock
@@ -1152,8 +1142,10 @@ void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer 
                 float division;
                 if (centeredText) {
                     division = 3;
-                } else {
-                    division = 2.04;
+                } else /* if (!showLineNumbers) */ {
+                  division = 2.016;
+                /* } else { */
+                /*   division = 2.0; */
                 }
 
                 offset = cursor_pos.x - w/3/sr->camera_scale;
