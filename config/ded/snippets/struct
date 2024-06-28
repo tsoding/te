@@ -1,0 +1,3 @@
+typedef struct {
+    $0
+} ${1:struct_name};

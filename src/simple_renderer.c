@@ -6,16 +6,42 @@
 #include <errno.h>
 #include "./simple_renderer.h"
 #include "./common.h"
+#include "./editor.h"
+#include <dirent.h>
 
-#define vert_shader_file_path "./shaders/simple.vert"
+char vert_shader_file_path[COUNT_VERTEX_SHADERS][MAX_SHADER_PATH_LENGTH];
+char frag_shader_file_paths[COUNT_FRAGMENT_SHADERS][MAX_SHADER_PATH_LENGTH];
 
-static_assert(COUNT_SIMPLE_SHADERS == 4, "The amount of fragment shaders has changed");
-const char *frag_shader_file_paths[COUNT_SIMPLE_SHADERS] = {
-    [SHADER_FOR_COLOR] = "./shaders/simple_color.frag",
-    [SHADER_FOR_IMAGE] = "./shaders/simple_image.frag",
-    [SHADER_FOR_TEXT] = "./shaders/simple_text.frag",
-    [SHADER_FOR_EPICNESS] = "./shaders/simple_epic.frag",
-};
+/* void set_shader_path(char* buffer, const char* shaderName) { */
+/*     const char* home = getenv("HOME"); */
+/*     snprintf(buffer, MAX_SHADER_PATH_LENGTH, "%s/.config/ded/shaders/%s", home, shaderName); */
+/* } */
+
+void set_shader_path(char* buffer, const char* shaderName) {
+    const char* home = getenv("HOME");
+    if (home == NULL) {
+        fprintf(stderr, "ERROR: HOME environment variable not set.\n");
+        return; // or handle error appropriately
+    }
+    snprintf(buffer, MAX_SHADER_PATH_LENGTH, "%s/.config/ded/shaders/%s", home, shaderName);
+    fprintf(stderr, "Shader path set to: %s\n", buffer); // Debug statement
+}
+
+
+void initialize_shader_paths() {
+    set_shader_path(vert_shader_file_path[VERTEX_SHADER_SIMPLE], "simple.vert");
+    set_shader_path(vert_shader_file_path[VERTEX_SHADER_FIXED], "fixed.vert");
+    set_shader_path(vert_shader_file_path[VERTEX_SHADER_MINIBUFFER], "minibuffer.vert");
+    set_shader_path(vert_shader_file_path[VERTEX_SHADER_WAVE], "wave.vert");
+
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_COLOR], "simple_color.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_IMAGE], "simple_image.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_TEXT], "simple_text.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_EPICNESS], "simple_epic.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_RAINBOW], "simple_rainbow.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_GLOW], "simple_glow.frag");
+    set_shader_path(frag_shader_file_paths[SHADER_FOR_CURSOR], "cursor.frag");
+}
 
 static const char *shader_type_as_cstr(GLuint shader)
 {
@@ -49,6 +75,7 @@ static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLui
 
     return true;
 }
+
 
 static bool compile_shader_file(const char *file_path, GLenum shader_type, GLuint *shader)
 {
@@ -128,105 +155,243 @@ static void get_uniform_location(GLuint program, GLint locations[COUNT_UNIFORM_S
     }
 }
 
-void simple_renderer_init(Simple_Renderer *sr)
-{
-    sr->camera_scale = 3.0f;
+/* void simple_renderer_init(Simple_Renderer *sr) */
+/* { */
 
-    {
-        glGenVertexArrays(1, &sr->vao);
-        glBindVertexArray(sr->vao);
+/*     if (followCursor) { */
+/*         sr->camera_scale = 3.0f; */
+/*     } */
 
-        glGenBuffers(1, &sr->vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, sr->vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(sr->verticies), sr->verticies, GL_DYNAMIC_DRAW);
+/*     { */
+/*         glGenVertexArrays(1, &sr->vao); */
+/*         glBindVertexArray(sr->vao); */
 
-        // position
-        glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_POSITION);
-        glVertexAttribPointer(
-            SIMPLE_VERTEX_ATTR_POSITION,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Simple_Vertex),
-            (GLvoid *) offsetof(Simple_Vertex, position));
+/*         glGenBuffers(1, &sr->vbo); */
+/*         glBindBuffer(GL_ARRAY_BUFFER, sr->vbo); */
+/*         glBufferData(GL_ARRAY_BUFFER, sizeof(sr->verticies), sr->verticies, GL_DYNAMIC_DRAW); */
 
-        // color
-        glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_COLOR);
-        glVertexAttribPointer(
-            SIMPLE_VERTEX_ATTR_COLOR,
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Simple_Vertex),
-            (GLvoid *) offsetof(Simple_Vertex, color));
+/*         // position */
+/*         glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_POSITION); */
+/*         glVertexAttribPointer( */
+/*             SIMPLE_VERTEX_ATTR_POSITION, */
+/*             2, */
+/*             GL_FLOAT, */
+/*             GL_FALSE, */
+/*             sizeof(Simple_Vertex), */
+/*             (GLvoid *) offsetof(Simple_Vertex, position)); */
 
-        // uv
-        glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_UV);
-        glVertexAttribPointer(
-            SIMPLE_VERTEX_ATTR_UV,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Simple_Vertex),
-            (GLvoid *) offsetof(Simple_Vertex, uv));
+/*         // color */
+/*         glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_COLOR); */
+/*         glVertexAttribPointer( */
+/*             SIMPLE_VERTEX_ATTR_COLOR, */
+/*             4, */
+/*             GL_FLOAT, */
+/*             GL_FALSE, */
+/*             sizeof(Simple_Vertex), */
+/*             (GLvoid *) offsetof(Simple_Vertex, color)); */
+
+/*         // uv */
+/*         glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_UV); */
+/*         glVertexAttribPointer( */
+/*             SIMPLE_VERTEX_ATTR_UV, */
+/*             2, */
+/*             GL_FLOAT, */
+/*             GL_FALSE, */
+/*             sizeof(Simple_Vertex), */
+/*             (GLvoid *) offsetof(Simple_Vertex, uv)); */
+/*     } */
+
+/*     GLuint shaders[2] = {0}; */
+
+/*     if (!compile_shader_file(vert_shader_file_path[VERTEX_SHADER_SIMPLE], GL_VERTEX_SHADER, &shaders[0])) { */
+/*         exit(1); */
+/*     } */
+
+/*     for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) { */
+/*         for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) { */
+/*             GLuint vertexShader, fragmentShader; */
+/*             compile_shader_file(vert_shader_file_path[v], GL_VERTEX_SHADER, &vertexShader); */
+/*             compile_shader_file(frag_shader_file_paths[f], GL_FRAGMENT_SHADER, &fragmentShader); */
+
+/*             GLuint program = glCreateProgram(); */
+/*             glAttachShader(program, vertexShader); */
+/*             glAttachShader(program, fragmentShader); */
+/*             link_program(program, __FILE__, __LINE__); */
+
+/*             sr->programs[v][f] = program; */
+
+/*             glDeleteShader(fragmentShader); */
+/*             glDeleteShader(vertexShader); */
+/*         } */
+/*     } */
+/*     glDeleteShader(shaders[0]); */
+/* } */
+
+/* void simple_renderer_reload_shaders(Simple_Renderer *sr) */
+/* { */
+/*     GLuint programs[COUNT_FRAGMENT_SHADERS]; */
+/*     GLuint shaders[2] = {0}; */
+
+/*     bool ok = true; */
+
+/*     if (!compile_shader_file(vert_shader_file_path, GL_VERTEX_SHADER, &shaders[0])) { */
+/*         ok = false; */
+/*     } */
+
+/*     for (int i = 0; i < COUNT_FRAGMENT_SHADERS; ++i) { */
+/*         if (!compile_shader_file(frag_shader_file_paths[i], GL_FRAGMENT_SHADER, &shaders[1])) { */
+/*             ok = false; */
+/*         } */
+/*         programs[i] = glCreateProgram(); */
+/*         attach_shaders_to_program(shaders, sizeof(shaders) / sizeof(shaders[0]), programs[i]); */
+/*         if (!link_program(programs[i], __FILE__, __LINE__)) { */
+/*             ok = false; */
+/*         } */
+/*         glDeleteShader(shaders[1]); */
+/*     } */
+/*     glDeleteShader(shaders[0]); */
+
+/*     if (ok) { */
+/*         /\* for (int i = 0; i < COUNT_FRAGMENT_SHADERS; ++i) { *\/ */
+/*         /\*     glDeleteProgram(sr->programs[i]); *\/ */
+/*         /\*     sr->programs[i] = programs[i]; *\/ */
+/*         /\* } *\/ */
+/*         for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) { */
+/*             for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) { */
+/*               glDeleteProgram(sr->programs[v][f]); */
+/*               sr->programs[v][f] = programs[v][f]; */
+/*             } */
+/*         } */
+
+/*         printf("Reloaded shaders successfully!\n"); */
+/*     } else { */
+/*         for (int i = 0; i < COUNT_FRAGMENT_SHADERS; ++i) { */
+/*             glDeleteProgram(programs[i]); */
+/*         } */
+/*     } */
+/* } */
+
+
+void simple_renderer_init(Simple_Renderer *sr) {
+    if (followCursor) {
+        sr->camera_scale = 3.0f;
     }
 
-    GLuint shaders[2] = {0};
+    // Initialize VAO and VBO
+    glGenVertexArrays(1, &sr->vao);
+    glBindVertexArray(sr->vao);
+    glGenBuffers(1, &sr->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, sr->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(sr->verticies), sr->verticies, GL_DYNAMIC_DRAW);
 
-    if (!compile_shader_file(vert_shader_file_path, GL_VERTEX_SHADER, &shaders[0])) {
-        exit(1);
-    }
+    // Setup vertex attributes
+    // Position
+    glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_POSITION);
+    glVertexAttribPointer(SIMPLE_VERTEX_ATTR_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(Simple_Vertex), (GLvoid *)offsetof(Simple_Vertex, position));
 
-    for (int i = 0; i < COUNT_SIMPLE_SHADERS; ++i) {
-        if (!compile_shader_file(frag_shader_file_paths[i], GL_FRAGMENT_SHADER, &shaders[1])) {
-            exit(1);
+    // Color
+    glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_COLOR);
+    glVertexAttribPointer(SIMPLE_VERTEX_ATTR_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Simple_Vertex), (GLvoid *)offsetof(Simple_Vertex, color));
+
+    // UV
+    glEnableVertexAttribArray(SIMPLE_VERTEX_ATTR_UV);
+    glVertexAttribPointer(SIMPLE_VERTEX_ATTR_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Simple_Vertex), (GLvoid *)offsetof(Simple_Vertex, uv));
+
+    // Compile and link shaders for each combination
+    for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+        for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+            GLuint vertexShader, fragmentShader;
+
+            if (!compile_shader_file(vert_shader_file_path[v], GL_VERTEX_SHADER, &vertexShader)) {
+                fprintf(stderr, "Failed to compile vertex in init: %s\n", vert_shader_file_path[v]);
+                continue;
+            }
+
+            if (!compile_shader_file(frag_shader_file_paths[f], GL_FRAGMENT_SHADER, &fragmentShader)) {
+                fprintf(stderr, "Failed to compile fragment in init: %s\n", frag_shader_file_paths[f]);
+                glDeleteShader(vertexShader);
+                continue;
+            }
+
+            GLuint program = glCreateProgram();
+            glAttachShader(program, vertexShader);
+            glAttachShader(program, fragmentShader);
+
+            if (!link_program(program, __FILE__, __LINE__)) {
+                fprintf(stderr, "Failed to link shader program in init\n");
+                glDeleteShader(vertexShader);
+                glDeleteShader(fragmentShader);
+                continue;
+            }
+
+            sr->programs[v][f] = program;
+
+            // Delete shaders after linking
+            glDeleteShader(vertexShader);
+            glDeleteShader(fragmentShader);
         }
-        sr->programs[i] = glCreateProgram();
-        attach_shaders_to_program(shaders, sizeof(shaders) / sizeof(shaders[0]), sr->programs[i]);
-        if (!link_program(sr->programs[i], __FILE__, __LINE__)) {
-            exit(1);
-        }
-        glDeleteShader(shaders[1]);
     }
-    glDeleteShader(shaders[0]);
 }
 
-void simple_renderer_reload_shaders(Simple_Renderer *sr)
-{
-    GLuint programs[COUNT_SIMPLE_SHADERS];
-    GLuint shaders[2] = {0};
-
+void simple_renderer_reload_shaders(Simple_Renderer *sr) {
     bool ok = true;
 
-    if (!compile_shader_file(vert_shader_file_path, GL_VERTEX_SHADER, &shaders[0])) {
-        ok = false;
-    }
+    GLuint vertexShaders[COUNT_VERTEX_SHADERS];
+    GLuint fragmentShaders[COUNT_FRAGMENT_SHADERS];
 
-    for (int i = 0; i < COUNT_SIMPLE_SHADERS; ++i) {
-        if (!compile_shader_file(frag_shader_file_paths[i], GL_FRAGMENT_SHADER, &shaders[1])) {
+    // Compile all vertex shaders
+    for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+        if (!compile_shader_file(vert_shader_file_path[v], GL_VERTEX_SHADER, &vertexShaders[v])) {
             ok = false;
         }
-        programs[i] = glCreateProgram();
-        attach_shaders_to_program(shaders, sizeof(shaders) / sizeof(shaders[0]), programs[i]);
-        if (!link_program(programs[i], __FILE__, __LINE__)) {
+    }
+
+    // Compile all fragment shaders
+    for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+        if (!compile_shader_file(frag_shader_file_paths[f], GL_FRAGMENT_SHADER, &fragmentShaders[f])) {
             ok = false;
         }
-        glDeleteShader(shaders[1]);
     }
-    glDeleteShader(shaders[0]);
 
+    // Link programs for each combination
+    GLuint newPrograms[COUNT_VERTEX_SHADERS][COUNT_FRAGMENT_SHADERS];
+    for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+        for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+            newPrograms[v][f] = glCreateProgram();
+            glAttachShader(newPrograms[v][f], vertexShaders[v]);
+            glAttachShader(newPrograms[v][f], fragmentShaders[f]);
+            if (!link_program(newPrograms[v][f], __FILE__, __LINE__)) {
+                ok = false;
+            }
+        }
+    }
+
+    // Clean up old programs and assign new ones
     if (ok) {
-        for (int i = 0; i < COUNT_SIMPLE_SHADERS; ++i) {
-            glDeleteProgram(sr->programs[i]);
-            sr->programs[i] = programs[i];
+        for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+            for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+                glDeleteProgram(sr->programs[v][f]);
+                sr->programs[v][f] = newPrograms[v][f];
+            }
         }
         printf("Reloaded shaders successfully!\n");
     } else {
-        for (int i = 0; i < COUNT_SIMPLE_SHADERS; ++i) {
-            glDeleteProgram(programs[i]);
+        for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+            for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+                glDeleteProgram(newPrograms[v][f]);
+            }
         }
     }
+
+    // Clean up shaders
+    for (int v = 0; v < COUNT_VERTEX_SHADERS; ++v) {
+        glDeleteShader(vertexShaders[v]);
+    }
+    for (int f = 0; f < COUNT_FRAGMENT_SHADERS; ++f) {
+        glDeleteShader(fragmentShaders[f]);
+    }
 }
+
 
 // TODO: Don't render triples of verticies that form a triangle that is completely outside of the screen
 //
@@ -301,6 +466,23 @@ void simple_renderer_solid_rect(Simple_Renderer *sr, Vec2f p, Vec2f s, Vec4f c)
         uv, uv, uv, uv);
 }
 
+void simple_renderer_circle(Simple_Renderer *sr, Vec2f center, float radius, Vec4f color, int segments) {
+    float angleStep = 2.0f * M_PI / segments;
+    
+    // Generate vertices for the circle
+    Vec2f lastVertex = {center.x + radius, center.y};
+    for (int i = 1; i <= segments; ++i) {
+        float angle = i * angleStep;
+        Vec2f newVertex = {center.x + cosf(angle) * radius, center.y + sinf(angle) * radius};
+
+        // Add the triangle for this segment
+        simple_renderer_triangle(sr, center, lastVertex, newVertex, color, color, color, vec2fs(0), vec2fs(0), vec2fs(0));
+        lastVertex = newVertex;
+    }
+}
+
+
+
 void simple_renderer_sync(Simple_Renderer *sr)
 {
     glBufferSubData(GL_ARRAY_BUFFER,
@@ -314,16 +496,33 @@ void simple_renderer_draw(Simple_Renderer *sr)
     glDrawArrays(GL_TRIANGLES, 0, sr->verticies_count);
 }
 
-void simple_renderer_set_shader(Simple_Renderer *sr, Simple_Shader shader)
-{
-    sr->current_shader = shader;
-    glUseProgram(sr->programs[sr->current_shader]);
-    get_uniform_location(sr->programs[sr->current_shader], sr->uniforms);
+/* void simple_renderer_set_shader(Simple_Renderer *sr, Simple_Shader shader) */
+/* { */
+/*     sr->current_shader = shader; */
+/*     glUseProgram(sr->programs[sr->current_shader]); */
+/*     get_uniform_location(sr->programs[sr->current_shader], sr->uniforms); */
+/*     glUniform2f(sr->uniforms[UNIFORM_SLOT_RESOLUTION], sr->resolution.x, sr->resolution.y); */
+/*     glUniform1f(sr->uniforms[UNIFORM_SLOT_TIME], sr->time); */
+/*     glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->camera_pos.x, sr->camera_pos.y); */
+/*     glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->camera_scale); */
+/* } */
+
+void simple_renderer_set_shader(Simple_Renderer *sr, int vertexShaderIndex, int fragmentShaderIndex) {
+    GLuint program = sr->programs[vertexShaderIndex][fragmentShaderIndex];
+    glUseProgram(program);
+
+    get_uniform_location(program, sr->uniforms);
+
     glUniform2f(sr->uniforms[UNIFORM_SLOT_RESOLUTION], sr->resolution.x, sr->resolution.y);
     glUniform1f(sr->uniforms[UNIFORM_SLOT_TIME], sr->time);
     glUniform2f(sr->uniforms[UNIFORM_SLOT_CAMERA_POS], sr->camera_pos.x, sr->camera_pos.y);
     glUniform1f(sr->uniforms[UNIFORM_SLOT_CAMERA_SCALE], sr->camera_scale);
+
+    // Optionally store the current shader indices if needed
+    sr->current_vertex_shader_index = vertexShaderIndex;
+    sr->current_fragment_shader_index = fragmentShaderIndex;
 }
+
 
 void simple_renderer_flush(Simple_Renderer *sr)
 {

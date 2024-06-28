@@ -1,0 +1,6 @@
+#ifndef ${1:HEADER_NAME}_H
+#define ${1:HEADER_NAME}_H
+
+$0
+
+#endif // ${1:HEADER_NAME}_H

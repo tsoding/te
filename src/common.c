@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "editor.h"
 
 #ifdef _WIN32
 #    define MINIRENT_IMPLEMENTATION
@@ -35,31 +36,103 @@ void temp_reset(void)
     arena_reset(&temporary_arena);
 }
 
-Errno read_entire_dir(const char *dir_path, Files *files)
-{
-    Errno result = 0;
-    DIR *dir = NULL;
 
-    dir = opendir(dir_path);
-    if (dir == NULL) {
-        return_defer(errno);
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+
+void get_file_info(const char *dir, const char *filename, FileInfo *info) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s", dir, filename);
+
+    struct stat statbuf;
+    if (stat(path, &statbuf) != 0) {
+        perror("Failed to get file stats");
+        memset(info, 0, sizeof(FileInfo));  // Clear the info struct on error
+        return;
     }
 
-    errno = 0;
-    struct dirent *ent = readdir(dir);
-    while (ent != NULL) {
-        da_append(files, temp_strdup(ent->d_name));
-        ent = readdir(dir);
-    }
+    info->name = strdup(filename);
 
-    if (errno != 0) {
-        return_defer(errno);
-    }
+    // Permissions
+    char permissions[11];
+    sprintf(permissions, "%c%c%c%c%c%c%c%c%c%c",
+            (S_ISDIR(statbuf.st_mode)) ? 'd' : '-',
+            (statbuf.st_mode & S_IRUSR) ? 'r' : '-',
+            (statbuf.st_mode & S_IWUSR) ? 'w' : '-',
+            (statbuf.st_mode & S_IXUSR) ? 'x' : '-',
+            (statbuf.st_mode & S_IRGRP) ? 'r' : '-',
+            (statbuf.st_mode & S_IWGRP) ? 'w' : '-',
+            (statbuf.st_mode & S_IXGRP) ? 'x' : '-',
+            (statbuf.st_mode & S_IROTH) ? 'r' : '-',
+            (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
+            (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
+    info->permissions = strdup(permissions);
 
-defer:
-    if (dir) closedir(dir);
-    return result;
+    // File size
+    info->size = statbuf.st_size;
+
+    // Modification time
+    char mod_time[20];
+    strftime(mod_time, sizeof(mod_time), "%Y-%m-%d %H:%M", localtime(&statbuf.st_mtime));
+    info->mod_time = strdup(mod_time);
+
+    // Owner and group
+    struct passwd *pwd = getpwuid(statbuf.st_uid);
+    struct group *grp = getgrgid(statbuf.st_gid);
+    info->owner = strdup(pwd ? pwd->pw_name : "unknown");
+    info->group = strdup(grp ? grp->gr_name : "unknown");
 }
+
+
+/* Errno read_entire_dir(const char *dir_path, Files *files) */
+/* { */
+/*     Errno result = 0; */
+/*     DIR *dir = NULL; */
+
+/*     dir = opendir(dir_path); */
+/*     if (dir == NULL) { */
+/*         return_defer(errno); */
+/*     } */
+
+/*     errno = 0; */
+/*     struct dirent *ent = readdir(dir); */
+/*     while (ent != NULL) { */
+/*         da_append(files, temp_strdup(ent->d_name)); */
+/*         ent = readdir(dir); */
+/*     } */
+
+/*     if (errno != 0) { */
+/*         return_defer(errno); */
+/*     } */
+
+/* defer: */
+/*     if (dir) closedir(dir); */
+/*     return result; */
+/* } */
+
+
+Errno read_entire_dir(const char *dir_path, Files *files) {
+    DIR *dir = opendir(dir_path);
+    if (dir == NULL) {
+        perror("Failed to open directory");
+        return errno;
+    }
+
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+            continue;
+
+        FileInfo info;
+        get_file_info(dir_path, ent->d_name, &info);
+        da_append(files, info);
+    }
+
+    closedir(dir);
+    return 0;
+}
+
 
 Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size)
 {
@@ -89,32 +162,112 @@ static Errno file_size(FILE *file, size_t *size)
     return 0;
 }
 
-Errno read_entire_file(const char *file_path, String_Builder *sb)
+Errno create_new_file_here(const char *file_name)
 {
     Errno result = 0;
-    FILE *f = NULL;
 
-    f = fopen(file_path, "r");
-    if (f == NULL) return_defer(errno);
+    FILE *f = fopen(file_name, "wb");
+    if (f == NULL)
+        return errno;
 
-    size_t size;
-    Errno err = file_size(f, &size);
-    if (err != 0) return_defer(err);
-
-    if (sb->capacity < size) {
-        sb->capacity = size;
-        sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items));
-        assert(sb->items != NULL && "Buy more RAM lol");
-    }
-
-    fread(sb->items, size, 1, f);
-    if (ferror(f)) return_defer(errno);
-    sb->count = size;
-
-defer:
-    if (f) fclose(f);
+    fclose(f);
     return result;
 }
+
+
+/* Errno read_entire_file(const char *file_path, String_Builder *sb) */
+/* { */
+/*     Errno result = 0; */
+/*     FILE *f = NULL; */
+
+/*     f = fopen(file_path, "r"); */
+/*     if (f == NULL) return_defer(errno); */
+
+/*     size_t size; */
+/*     Errno err = file_size(f, &size); */
+/*     if (err != 0) return_defer(err); */
+
+/*     if (sb->capacity < size) { */
+/*         sb->capacity = size; */
+/*         sb->items = realloc(sb->items, sb->capacity*sizeof(*sb->items)); */
+/*         assert(sb->items != NULL && "Buy more RAM lol"); */
+/*     } */
+
+/*     fread(sb->items, size, 1, f); */
+/*     if (ferror(f)) return_defer(errno); */
+/*     sb->count = size; */
+
+/* defer: */
+/*     if (f) fclose(f); */
+/*     return result; */
+/* } */
+
+
+// Convert tabs into 4 spaces
+// and ignore carriage returns
+/* Errno read_entire_file(const char *file_path, String_Builder *sb) { */
+/*     FILE *f = fopen(file_path, "r"); */
+/*     if (f == NULL) */
+/*          return 1; */
+
+/*     int c; */
+/*     while ((c = fgetc(f)) != EOF && c != '\0') { */
+/*         if (c == '\t') { */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*             da_append(sb, ' '); */
+/*         } else if (c == '\r') { */
+/*             continue; */
+/*         } else { */
+/*             da_append(sb, (char) c); */
+/*         } */
+/*     } */
+
+/*     fclose(f); */
+/*     return 0; */
+/* } */
+
+
+// Convert tabs into 4 spaces
+// and ignore carriage returns
+Errno read_entire_file(const char *file_path, String_Builder *sb) {
+    FILE *f = fopen(file_path, "r+");
+    if (f == NULL) {
+        if (errno == EACCES) {
+            // Retry opening in read-only mode
+            f = fopen(file_path, "r");
+            if (f == NULL) return 1; // If opening still fails, return error
+            readonly = true;
+        } else {
+            return 1; // Other errors, return error
+        }
+    }
+
+    int c;
+    while ((c = fgetc(f)) != EOF && c != '\0') {
+        if (c == '\t') {
+            for (size_t i = 0; i < indentation; i++) {
+                da_append(sb, ' ');
+            }
+        } else if (c == '\r') {
+            continue; // Ignore carriage returns
+        } else {
+            da_append(sb, (char)c);
+        }
+    }
+
+    fclose(f);
+    return 0;
+}
+
+
+
+
+bool is_hex_digit(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
 
 Vec4f hex_to_vec4f(uint32_t color)
 {
@@ -147,3 +300,4 @@ Errno type_of_file(const char *file_path, File_Type *ft)
 #endif
     return 0;
 }
+

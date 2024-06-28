@@ -1,5 +1,4 @@
 #include "./la.h"
-
 Vec2f vec2f(float x, float y)
 {
     return (Vec2f) {

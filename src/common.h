@@ -4,11 +4,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "./la.h"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define FPS 60
+#define FPS 144
 #define DELTA_TIME (1.0f / FPS)
 #define CURSOR_OFFSET 0.13f
 
@@ -92,8 +93,18 @@ typedef struct {
 
 #define sb_to_sv(sb) sv_from_parts((sb).items, (sb).count)
 
+// ADDED
 typedef struct {
-    const char **items;
+    char *name;
+    char *permissions;
+    long size;
+    char *mod_time;
+    char *owner;
+    char *group;
+} FileInfo;
+
+typedef struct {
+    FileInfo *items;
     size_t count;
     size_t capacity;
 } Files;
@@ -109,6 +120,12 @@ Errno read_entire_file(const char *file_path, String_Builder *sb);
 Errno write_entire_file(const char *file_path, const char *buf, size_t buf_size);
 Errno read_entire_dir(const char *dir_path, Files *files);
 
+void get_file_info(const char *dir, const char *filename, FileInfo *info);
+
+
+
+bool is_hex_digit(char c);
 Vec4f hex_to_vec4f(uint32_t color);
+
 
 #endif // COMMON_H_

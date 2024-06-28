@@ -1,0 +1,7 @@
+switch (${1:variable}) {
+    case ${2:case1}:
+        $0
+        break;
+    default:
+        break;
+}
