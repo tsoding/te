@@ -2,7 +2,7 @@
 
 set -xe
 
-CC="${CXX:-cc}"
+CC="${CC:-cc}"
 PKGS="sdl2 glew freetype2"
 CFLAGS="-Wall -Wextra -std=c11 -pedantic -ggdb"
 LIBS=-lm
